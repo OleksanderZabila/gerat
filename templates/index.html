@@ -3,26 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>СТО «Герат» — Керування</title>
+    <title>СТО «Герат»</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body { background-color: #f8f9fa; }
-        .scrollable-area { max-height: 400px; overflow-y: auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #dee2e6; }
-        .model-item { cursor: pointer; transition: 0.1s; font-size: 1.1rem; padding-left: 2.5rem; }
-        .model-item:hover { background-color: #f8f9fa; }
-        .model-item.active { background-color: #e9ecef; border-left: 4px solid #0d6efd; font-weight: bold;}
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 3px; }
-        .nav-tabs .nav-link { font-size: 1.1rem; border: none; padding: 10px 15px; }
-        .nav-tabs .nav-link.active { border-bottom: 4px solid #0d6efd; font-weight: bold; color: #0d6efd !important;}
-        .brand-header { cursor: pointer; font-weight: bold; font-size: 1.1rem; background-color: #f8f9fa; }
-        .brand-header:hover { background-color: #e2e6ea; }
+        .scrollable-area { max-height: 400px; overflow-y: auto; background-color: #fff; border-radius: 8px; border: 1px solid #dee2e6; }
+        .model-item { cursor: pointer; transition: 0.1s; font-size: 1.1rem; padding: 10px 15px 10px 2.5rem; border-bottom: 1px solid #eee; position: relative; }
+        .model-item:hover { background-color: #f1f3f5; }
+        .model-item.active { background-color: #e9ecef; border-left: 4px solid #0d6efd; font-weight: bold; }
+        .action-btn { opacity: 0; transition: 0.2s; cursor: pointer; margin-left: 8px; font-size: 1rem; }
+        .brand-row:hover .action-btn, .model-item:hover .action-btn { opacity: 1; }
+        .edit-icon { color: #ffc107; } .del-icon { color: #dc3545; }
+        .brand-header-btn { cursor: pointer; font-weight: bold; font-size: 1.1rem; background: none; border: none; flex-grow: 1; text-align: left; padding: 10px; }
         @media (min-width: 992px) {
             body { overflow: hidden; }
-            .scrollable-cars { height: calc(100vh - 275px); max-height: none; }
-            .scrollable-services { height: calc(100vh - 235px); max-height: none; }
-            .scrollable-cart { height: calc(100vh - 290px); max-height: none; border-radius: 0; }
+            .scrollable-cars, .scrollable-gen { height: calc(100vh - 280px); max-height: none; }
+            .scrollable-services { height: calc(100vh - 240px); max-height: none; }
+            .scrollable-cart { height: calc(100vh - 300px); max-height: none; }
         }
     </style>
 </head>
@@ -30,12 +28,10 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-3">
   <div class="container-fluid px-4">
-    <a class="navbar-brand fw-bold fs-4" href="#">🔧 СТО «Герат»</a>
-    <div class="collapse navbar-collapse">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-4">
-        <li class="nav-item"><a class="nav-link text-white fw-bold fs-5" href="#">Гараж (Послуги)</a></li>
-        <li class="nav-item"><a class="nav-link text-secondary fs-5" href="#">Автомагазин (Склад)</a></li>
-      </ul>
+    <a class="navbar-brand fw-bold fs-4">🔧 СТО «Герат»</a>
+    <div class="navbar-nav">
+        <a class="nav-link text-white active fw-bold fs-5 ms-3">Гараж (Послуги)</a>
+        <a class="nav-link text-secondary fs-5 ms-3">Автомагазин</a>
     </div>
   </div>
 </nav>
@@ -43,240 +39,137 @@
 <div class="container-fluid px-4">
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card shadow-sm border-0 h-100 bg-white">
-                <div class="card-header bg-white pt-2 pb-0 px-2 px-lg-4 border-bottom">
-                    <ul class="nav nav-tabs border-0 flex-nowrap overflow-auto" style="white-space: nowrap;">
-                      <li class="nav-item"><a class="nav-link active text-primary" id="tab-cars" href="#" onclick="switchTab('cars')">🚗 База Авто</a></li>
-                      <li class="nav-item"><a class="nav-link text-secondary" id="tab-gen" href="#" onclick="switchTab('gen')">🛠 Загальні послуги</a></li>
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white pt-2 pb-0">
+                    <ul class="nav nav-tabs border-0">
+                      <li class="nav-item"><a class="nav-link active" id="tab-cars" onclick="switchTab('cars')">🚗 База Авто</a></li>
+                      <li class="nav-item"><a class="nav-link" id="tab-gen" onclick="switchTab('gen')">🛠 Загальні послуги</a></li>
                     </ul>
                 </div>
-                <div class="card-body p-2 p-lg-3 bg-light">
+                <div class="card-body p-3 bg-light">
                     <div id="view-cars" class="row g-3">
                         <div class="col-lg-5">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="text-primary m-0 fw-bold">Марка та Модель</h5>
-                                <button class="btn btn-outline-primary btn-sm fw-bold" onclick="openImportModal()">
-                                    <i class="bi bi-robot"></i> Імпорт з ШІ
-                                </button>
+                            <div class="d-flex justify-content-between mb-2">
+                                <h5 class="text-primary fw-bold m-0">Марки та Моделі</h5>
+                                <div>
+                                    <button class="btn btn-primary btn-sm fw-bold me-1" onclick="carModal.show()"><i class="bi bi-plus-lg"></i> Додати авто</button>
+                                    <button class="btn btn-outline-primary btn-sm fw-bold" onclick="importModal.show()"><i class="bi bi-robot"></i> Імпорт з ШІ</button>
+                                </div>
                             </div>
-                            <input type="text" id="carSearchInput" class="form-control mb-2 border-primary" placeholder="Пошук моделі..." oninput="filterCars()">
-                            <div class="scrollable-area scrollable-cars">
-                                <div class="accordion accordion-flush" id="brandsAccordion"></div>
-                            </div>
+                            <input type="text" id="carSearch" class="form-control mb-2" placeholder="Пошук..." oninput="filterCars()">
+                            <div class="scrollable-area scrollable-cars"><div class="accordion accordion-flush" id="brandsAccordion"></div></div>
                         </div>
-                        <div class="col-lg-7 mt-4 mt-lg-0">
+                        <div class="col-lg-7">
                             <div id="carServicesArea" class="d-none">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h5 class="text-secondary m-0 fw-bold text-truncate" id="selectedCarTitle">Послуги</h5>
-                                    <button class="btn btn-success btn-sm" onclick="openAddServiceModal()"><i class="bi bi-plus-lg"></i> Послуга</button>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h5 class="text-secondary fw-bold m-0" id="selectedCarTitle">Послуги</h5>
+                                    <button class="btn btn-success btn-sm" onclick="serviceModal.show()"><i class="bi bi-plus-lg"></i> Додати послугу</button>
                                 </div>
-                                <div class="scrollable-area scrollable-services p-1">
-                                    <table class="table table-hover align-middle"><tbody id="servicesTableBody"></tbody></table>
-                                </div>
+                                <div class="scrollable-area scrollable-services px-2 py-1"><table class="table table-hover align-middle bg-white"><tbody id="servicesTable"></tbody></table></div>
                             </div>
-                            <div id="noCarSelected" class="d-flex flex-column align-items-center justify-content-center text-muted h-100 py-5">
-                                <i class="bi bi-diagram-3 fs-1 mb-2"></i><h6>Розгорніть марку та оберіть модель</h6>
-                            </div>
+                            <div id="noCar" class="text-center mt-5 text-muted"><i class="bi bi-car-front fs-1"></i><h6>Оберіть модель</h6></div>
                         </div>
                     </div>
                     <div id="view-gen" class="d-none">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="text-dark m-0 fw-bold">Загальні послуги</h5>
-                            <button class="btn btn-dark px-4 btn-sm" onclick="openGenServiceModal()"><i class="bi bi-plus-lg"></i> Додати</button>
-                        </div>
-                        <input type="text" id="genServiceSearchInput" class="form-control mb-2 border-dark" placeholder="Пошук послуги..." oninput="filterGenServices()">
-                        <div class="scrollable-area scrollable-cars p-1">
-                            <table class="table table-hover align-middle fs-6"><tbody id="genServicesTableBody"></tbody></table>
-                        </div>
+                        <div class="d-flex justify-content-between mb-2"><h5 class="fw-bold">Загальні послуги</h5><button class="btn btn-dark btn-sm" onclick="genModal.show()"><i class="bi bi-plus-lg"></i> Додати</button></div>
+                        <div class="scrollable-area scrollable-gen px-2"><table class="table table-hover align-middle"><tbody id="genServicesTable"></tbody></table></div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-4 mb-4">
+        <div class="col-lg-4">
             <div class="card shadow-sm border-primary h-100">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between py-3">
                     <h5 class="m-0 fw-bold"><i class="bi bi-receipt"></i> Чек</h5>
                     <span class="badge bg-light text-primary fs-6" id="cartTotal">0 ₴</span>
                 </div>
                 <div class="card-body p-0 d-flex flex-column">
-                    <div class="scrollable-area scrollable-cart border-0 flex-grow-1">
-                        <ul class="list-group list-group-flush" id="cartList">
-                            <li class="list-group-item text-center text-muted border-0 mt-5 fs-6">Порожньо</li>
-                        </ul>
-                    </div>
-                    <div class="p-3 border-top bg-light">
-                        <button class="btn btn-success w-100 btn-lg shadow-sm fw-bold" id="saveInvoiceBtn" disabled><i class="bi bi-printer"></i> ДРУК</button>
-                    </div>
+                    <div class="scrollable-area scrollable-cart border-0 flex-grow-1"><ul class="list-group list-group-flush" id="cartList"></ul></div>
+                    <div class="p-3 bg-light border-top"><button class="btn btn-success w-100 btn-lg fw-bold" id="printBtn" disabled onclick="window.print()">ДРУКУВАТИ</button></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="importModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content border-primary">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title"><i class="bi bi-robot"></i> Масовий імпорт бази</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p class="text-muted small mb-2">Вставте текст, згенерований ШІ. Програма автоматично проігнорує звичайний текст, знайде всі рядки у форматі <code class="fs-6">"Марка" {Модель} [ Послуга ] | Ціна |</code> і розкидає їх по базі.</p>
-        <textarea id="importTextInput" class="form-control bg-light" rows="12" placeholder='Наприклад:&#10;"Ford" {Focus_2016} [ заміна масла ] | 400 |&#10;"Ford" {Mondeo_2018} [ діагностика ] | 350 |'></textarea>
-      </div>
-      <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-        <button type="button" class="btn btn-primary fw-bold px-4" id="startImportBtn" onclick="runBulkImport()">
-            <i class="bi bi-cloud-download"></i> Почати імпорт
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="serviceModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title">Додати послугу</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="serviceNameInput" class="form-control mb-3" placeholder="Назва"><input type="number" id="servicePriceInput" class="form-control" placeholder="Ціна"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-success fw-bold" onclick="saveService()">Зберегти</button></div></div></div></div>
-<div class="modal fade" id="genServiceModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5 class="modal-title">Додати загальну послугу</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="genServiceNameInput" class="form-control mb-3" placeholder="Назва"><input type="number" id="genServicePriceInput" class="form-control" placeholder="Ціна"></div><div class="modal-footer"><button class="btn btn-dark" onclick="saveGenService()">Зберегти</button></div></div></div></div>
+<div class="modal fade" id="carModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>Додати авто</h5></div><div class="modal-body"><input id="nb" class="form-control mb-2" placeholder="Марка (Ford)"><input id="nm" class="form-control" placeholder="Модель (Focus)"></div><div class="modal-footer"><button class="btn btn-primary w-100" onclick="saveCar()">Зберегти</button></div></div></div></div>
+<div class="modal fade" id="importModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5>Імпорт через ШІ</h5></div><div class="modal-body"><textarea id="it" class="form-control" rows="10"></textarea></div><div class="modal-footer"><button class="btn btn-primary w-100" onclick="runImport()">ІМПОРТУВАТИ</button></div></div></div></div>
+<div class="modal fade" id="serviceModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5>Нова послуга</h5></div><div class="modal-body"><input id="sn" class="form-control mb-2" placeholder="Назва"><input id="sp" type="number" class="form-control" placeholder="Ціна"></div><div class="modal-footer"><button class="btn btn-success w-100" onclick="saveSrv()">Додати</button></div></div></div></div>
+<div class="modal fade" id="genModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5>Загальна послуга</h5></div><div class="modal-body"><input id="gn" class="form-control mb-2" placeholder="Назва"><input id="gp" type="number" class="form-control" placeholder="Ціна"></div><div class="modal-footer"><button class="btn btn-dark w-100" onclick="saveGen()">Додати</button></div></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    let dbDict = {{ db_dict | tojson }}; let genServices = {{ general_services | tojson }};
-    let currentBrand = ""; let currentModel = ""; let carSearchQuery = ""; let genServiceSearchQuery = ""; let cart = [];
-
-    const importModal = new bootstrap.Modal(document.getElementById('importModal'));
-    const serviceModal = new bootstrap.Modal(document.getElementById('serviceModal'));
-    const genServiceModal = new bootstrap.Modal(document.getElementById('genServiceModal'));
-
-    window.onload = function() { renderBrands(); renderGenServices(); };
-
-    // --- ЛОГІКА ІМПОРТУ ---
-    function openImportModal() {
-        document.getElementById('importTextInput').value = '';
-        importModal.show();
-    }
-
-    async function runBulkImport() {
-        const text = document.getElementById('importTextInput').value;
-        if (!text.trim()) return;
-
-        const btn = document.getElementById('startImportBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Зберігаю в базу...';
-
-        let res = await fetch('/api/bulk_import', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ text: text })
-        });
-
-        let data = await res.json();
-
-        if (data.success) {
-            importModal.hide();
-            // Масове оновлення закінчено - просто перезавантажуємо сторінку, щоб підтягнути нову базу
-            alert(`🎉 Імпорт завершено! Додано нових унікальних послуг: ${data.added}`);
-            window.location.reload();
-        } else {
-            alert(data.error);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-cloud-download"></i> Почати імпорт';
-        }
-    }
-
-    function switchTab(tab) {
-        if (tab === 'cars') {
-            document.getElementById('view-cars').classList.remove('d-none'); document.getElementById('view-gen').classList.add('d-none');
-            document.getElementById('tab-cars').classList.add('active', 'text-primary'); document.getElementById('tab-cars').classList.remove('text-secondary');
-            document.getElementById('tab-gen').classList.remove('active', 'text-primary'); document.getElementById('tab-gen').classList.add('text-secondary');
-        } else {
-            document.getElementById('view-cars').classList.add('d-none'); document.getElementById('view-gen').classList.remove('d-none');
-            document.getElementById('tab-gen').classList.add('active', 'text-primary'); document.getElementById('tab-gen').classList.remove('text-secondary');
-            document.getElementById('tab-cars').classList.remove('active', 'text-primary'); document.getElementById('tab-cars').classList.add('text-secondary');
-        }
-    }
-
-    function filterCars() { carSearchQuery = document.getElementById('carSearchInput').value.toLowerCase(); renderBrands(); }
-    function filterGenServices() { genServiceSearchQuery = document.getElementById('genServiceSearchInput').value.toLowerCase(); renderGenServices(); }
+    let dbDict = {{ db_dict | tojson }}; let genSrv = {{ general_services | tojson }};
+    let curB = ""; let curM = ""; let searchQ = ""; let cart = [];
+    const carModal = new bootstrap.Modal(document.getElementById('carModal')), importModal = new bootstrap.Modal(document.getElementById('importModal')), serviceModal = new bootstrap.Modal(document.getElementById('serviceModal')), genModal = new bootstrap.Modal(document.getElementById('genModal'));
 
     function renderBrands() {
-        const accordion = document.getElementById('brandsAccordion'); accordion.innerHTML = ''; let index = 0;
-        for (const [brand, models] of Object.entries(dbDict)) {
-            let matchedModels = Object.keys(models).filter(m => m.toLowerCase().includes(carSearchQuery) || brand.toLowerCase().includes(carSearchQuery));
-            if (carSearchQuery !== "" && matchedModels.length === 0) continue;
-            let modelsHtml = '';
-            for(const m of matchedModels) {
-                let isActive = (currentBrand === brand && currentModel === m) ? 'active' : '';
-                modelsHtml += `<div class="list-group-item model-item ${isActive}" onclick="selectModel('${brand}', '${m}')">${m}</div>`;
-            }
-            let isOpen = (currentBrand === brand || carSearchQuery !== "") ? 'show' : '';
-            let btnClass = isOpen ? '' : 'collapsed';
-            accordion.innerHTML += `<div class="accordion-item border-0 border-bottom"><h2 class="accordion-header"><button class="accordion-button brand-header ${btnClass} py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}">${brand}</button></h2><div id="collapse${index}" class="accordion-collapse collapse ${isOpen}"><div class="list-group list-group-flush pb-2">${modelsHtml}</div></div></div>`;
-            index++;
-        }
-    }
-
-    function selectModel(brand, model) {
-        currentBrand = brand; currentModel = model; renderBrands();
-        document.getElementById('noCarSelected').classList.add('d-none'); document.getElementById('carServicesArea').classList.remove('d-none');
-        document.getElementById('selectedCarTitle').textContent = `${brand} ${model}`; renderServices();
-    }
-
-    function renderServices() {
-        const tbody = document.getElementById('servicesTableBody'); tbody.innerHTML = '';
-        let services = dbDict[currentBrand][currentModel];
-        services.forEach((s, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td class="fs-6">${s.posluga}</td><td class="text-end fw-bold fs-6 text-primary">${s.cina} ₴</td><td class="text-end" style="white-space: nowrap;"><button class="btn btn-success btn-sm py-1 px-2 me-1" onclick="addToCart('${s.posluga}', ${s.cina})"><i class="bi bi-cart-plus"></i> Додати</button><button class="btn btn-outline-danger btn-sm py-1 px-2" onclick="deleteService(${s.id}, ${index})"><i class="bi bi-trash"></i></button></td>`;
-            tbody.appendChild(tr);
+        const acc = document.getElementById('brandsAccordion'); acc.innerHTML = '';
+        Object.keys(dbDict).sort().forEach((b, i) => {
+            let mods = Object.keys(dbDict[b]).filter(m => m.toLowerCase().includes(searchQ) || b.toLowerCase().includes(searchQ));
+            if (searchQ && !mods.length) return;
+            let mHtml = mods.sort().map(m => `
+                <div class="model-item d-flex justify-content-between align-items-center ${curB===b && curM===m?'active':''}" onclick="selectM('${b}','${m}')">
+                    <span>${m}</span><div><i class="bi bi-pencil-square action-btn edit-icon" onclick="event.stopPropagation(); renM('${b}','${m}')"></i><i class="bi bi-trash action-btn del-icon" onclick="event.stopPropagation(); delM('${b}','${m}')"></i></div>
+                </div>`).join('');
+            acc.innerHTML += `
+                <div class="accordion-item border-0 border-bottom"><div class="d-flex align-items-center bg-white brand-row px-2">
+                    <button class="brand-header-btn" type="button" data-bs-toggle="collapse" data-bs-target="#c${i}">${b}</button>
+                    <i class="bi bi-pencil-square action-btn edit-icon" onclick="renB('${b}')"></i><i class="bi bi-trash action-btn del-icon px-2" onclick="delB('${b}')"></i>
+                </div><div id="c${i}" class="accordion-collapse collapse show"><div class="list-group list-group-flush">${mHtml}</div></div></div>`;
         });
     }
 
-    function openAddServiceModal() { document.getElementById('serviceNameInput').value=''; document.getElementById('servicePriceInput').value=''; serviceModal.show(); }
-    async function saveService() {
-        const name = document.getElementById('serviceNameInput').value; const price = document.getElementById('servicePriceInput').value; if(!name || !price) return;
-        let res = await fetch('/api/add_service', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ brand: currentBrand, model: currentModel, service_name: name, price: price }) });
-        let data = await res.json();
-        if (data.success) { dbDict[currentBrand][currentModel].push({id: data.id, posluga: name, cina: price}); serviceModal.hide(); renderServices(); }
-    }
-    async function deleteService(id, index) {
-        if(!confirm("Видалити цю послугу?")) return;
-        let res = await fetch('/api/delete_service', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id: id }) });
-        if ((await res.json()).success) { dbDict[currentBrand][currentModel].splice(index, 1); renderServices(); }
-    }
+    function selectM(b, m) { curB=b; curM=m; renderBrands(); renderSrv(); document.getElementById('noCar').classList.add('d-none'); document.getElementById('carServicesArea').classList.remove('d-none'); document.getElementById('selectedCarTitle').innerText = b+' '+m; }
 
-    function renderGenServices() {
-        const tbody = document.getElementById('genServicesTableBody'); tbody.innerHTML = '';
-        genServices.forEach(gs => {
-            if (!gs.posluga.toLowerCase().includes(genServiceSearchQuery)) return;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td class="fs-6">${gs.posluga}</td><td class="text-end fw-bold fs-6">${gs.cina} ₴</td><td class="text-end" style="white-space: nowrap;"><button class="btn btn-success btn-sm py-1 px-2 me-1" onclick="addToCart('${gs.posluga}', ${gs.cina})"><i class="bi bi-cart-plus"></i> Додати</button><button class="btn btn-outline-danger btn-sm py-1 px-2" onclick="deleteGenService(${gs.id})"><i class="bi bi-trash"></i></button></td>`;
-            tbody.appendChild(tr);
+    function renderSrv() {
+        const tb = document.getElementById('servicesTable'); tb.innerHTML = '';
+        dbDict[curB][curM].forEach(s => {
+            tb.innerHTML += `<tr><td class="w-100">${s.posluga}</td><td class="text-end fw-bold px-3 text-nowrap">${s.cina} ₴</td>
+                <td class="text-end text-nowrap">
+                    <i class="bi bi-pencil-square text-warning fs-5 me-3 pointer" style="cursor:pointer" onclick="edP(${s.id},${s.cina})"></i>
+                    <i class="bi bi-trash text-danger fs-5 me-3 pointer" style="cursor:pointer" onclick="delS(${s.id})"></i>
+                    <i class="bi bi-plus-circle-fill text-success fs-4 pointer" style="cursor:pointer" onclick="addC('${s.posluga}',${s.cina})"></i>
+                </td></tr>`;
         });
     }
 
-    function openGenServiceModal() { document.getElementById('genServiceNameInput').value=''; document.getElementById('genServicePriceInput').value=''; genServiceModal.show(); }
-    async function saveGenService() {
-        const name = document.getElementById('genServiceNameInput').value; const price = document.getElementById('genServicePriceInput').value; if(!name || !price) return;
-        let res = await fetch('/api/add_general_service', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: name, price: price }) });
-        let data = await res.json();
-        if (data.success) { genServices.push({id: data.id, posluga: name, cina: price}); genServiceModal.hide(); renderGenServices(); }
-    }
-    async function deleteGenService(id) {
-        if(!confirm("Видалити цю послугу?")) return;
-        let res = await fetch('/api/delete_general_service', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id: id }) });
-        if ((await res.json()).success) { genServices = genServices.filter(gs => gs.id !== id); renderGenServices(); }
+    function renderGen() {
+        const tb = document.getElementById('genServicesTable'); tb.innerHTML = '';
+        genSrv.forEach(s => {
+            tb.innerHTML += `<tr><td class="w-100">${s.posluga}</td><td class="fw-bold px-3">${s.cina} ₴</td>
+                <td class="text-end"><button class="btn btn-sm btn-success me-2" onclick="addC('${s.posluga}',${s.cina})">+</button><button class="btn btn-sm btn-outline-danger" onclick="delG(${s.id})">x</button></td></tr>`;
+        });
     }
 
-    function addToCart(name, price) { cart.push({name, price}); renderCart(); }
+    async function saveCar() { await fetch('/api/add_car',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brand:document.getElementById('nb').value,model:document.getElementById('nm').value})}); location.reload(); }
+    async function renB(o) { let n=prompt("Нова назва:",o); if(n&&n!==o){ await fetch('/api/rename_brand',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_name:o,new_name:n})}); location.reload(); }}
+    async function renM(b,o) { let n=prompt("Нова назва:",o); if(n&&n!==o){ await fetch('/api/rename_model',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brand:b,old_name:o,new_name:n})}); location.reload(); }}
+    async function saveSrv() { await fetch('/api/add_service',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brand:curB,model:curM,service_name:document.getElementById('sn').value,price:parseInt(document.getElementById('sp').value)})}); location.reload(); }
+    async function edP(id,o) { let n=prompt("Ціна:",o); if(n){ await fetch('/api/edit_service',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,price:n})}); location.reload(); }}
+    async function delS(id) { if(confirm("Видалити?")){ await fetch('/api/delete_service',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}); location.reload(); }}
+    async function delB(n) { if(confirm("Видалити марку?")){ await fetch('/api/delete_brand',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n})}); location.reload(); }}
+    async function delM(b,m) { if(confirm("Видалити модель?")){ await fetch('/api/delete_model',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({brand:b,model:m})}); location.reload(); }}
+    async function runImport() { await fetch('/api/bulk_import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:document.getElementById('it').value})}); location.reload(); }
+    async function saveGen() { await fetch('/api/add_general_service',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('gn').value,price:parseInt(document.getElementById('gp').value)})}); location.reload(); }
+    async function delG(id) { await fetch('/api/delete_general_service',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}); location.reload(); }
+
+    function addC(n,p) { cart.push({n,p}); renderCart(); }
     function renderCart() {
-        const list = document.getElementById('cartList'); const totalEl = document.getElementById('cartTotal');
-        list.innerHTML = ''; let total = 0;
-        if(cart.length === 0) { list.innerHTML = '<li class="list-group-item text-center text-muted border-0 mt-5 fs-6">Порожньо</li>'; document.getElementById('saveInvoiceBtn').disabled = true; totalEl.textContent = "0 ₴"; return; }
-        cart.forEach((item, index) => {
-            total += parseInt(item.price);
-            list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center border-0 px-2 py-3 border-bottom fs-6"><span class="text-truncate" style="max-width:60%">${item.name}</span> <span class="fw-bold" style="white-space:nowrap">${item.price} ₴ <i class="bi bi-x-circle text-danger ms-2" style="cursor:pointer;" onclick="cart.splice(${index},1);renderCart()"></i></span></li>`;
-        });
-        totalEl.textContent = total + " ₴"; document.getElementById('saveInvoiceBtn').disabled = false;
+        const l = document.getElementById('cartList'); let t=0;
+        l.innerHTML = cart.length?'':'<li class="p-4 text-center text-muted">Порожньо</li>';
+        cart.forEach((i,idx)=>{ t+=parseInt(i.p); l.innerHTML+=`<li class="list-group-item d-flex justify-content-between"><span>${i.n}</span><b>${i.p} ₴ <i class="bi bi-x text-danger" onclick="cart.splice(${idx},1);renderCart()"></i></b></li>`; });
+        document.getElementById('cartTotal').innerText = t+' ₴'; document.getElementById('printBtn').disabled = !cart.length;
     }
+    function filterCars() { searchQ = document.getElementById('carSearch').value.toLowerCase(); renderBrands(); }
+    function switchTab(t) {
+        document.getElementById('view-cars').classList.toggle('d-none', t!=='cars');
+        document.getElementById('view-gen').classList.toggle('d-none', t!=='gen');
+        document.getElementById('tab-cars').classList.toggle('active', t==='cars');
+        document.getElementById('tab-gen').classList.toggle('active', t==='gen');
+        if(t==='gen') renderGen();
+    }
+    window.onload = () => { renderBrands(); renderGen(); }
 </script>
 </body>
 </html>
