@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СТО «Герат» — Керування</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+
+        /* БАЗОВІ СТИЛІ ДЛЯ МОБІЛКИ (Скрол дозволено) */
+        .scrollable-area {
+            max-height: 400px; /* На мобілці блоки не будуть безкінечними */
+            overflow-y: auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .car-item { cursor: pointer; transition: 0.1s; font-size: 1.1rem; }
+        .car-item:hover { background-color: #f8f9fa; }
+        .car-item.active { background-color: #e9ecef; border-left: 6px solid #0d6efd; font-weight: bold;}
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 3px; }
+        .nav-tabs .nav-link { font-size: 1.1rem; border: none; padding: 10px 15px; }
+        .nav-tabs .nav-link.active { border-bottom: 4px solid #0d6efd; font-weight: bold; color: #0d6efd !important;}
+
+        /* СТИЛІ ТІЛЬКИ ДЛЯ КОМП'ЮТЕРА (Блокуємо загальний скрол) */
+        @media (min-width: 992px) {
+            body { overflow: hidden; }
+            .scrollable-cars { height: calc(100vh - 275px); max-height: none; }
+            .scrollable-services { height: calc(100vh - 235px); max-height: none; }
+            .scrollable-cart { height: calc(100vh - 290px); max-height: none; border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-3">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold fs-4" href="#">🔧 СТО «Герат»</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-4">
+        <li class="nav-item"><a class="nav-link text-white fw-bold fs-5" href="#">Гараж (Послуги)</a></li>
+        <li class="nav-item"><a class="nav-link text-secondary fs-5" href="#">Автомагазин (Склад)</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-4">
+    <div class="row g-4">
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100 bg-white">
+
+                <div class="card-header bg-white pt-2 pb-0 px-2 px-lg-4 border-bottom">
+                    <ul class="nav nav-tabs border-0 flex-nowrap overflow-auto" style="white-space: nowrap;">
+                      <li class="nav-item">
+                        <a class="nav-link active text-primary" id="tab-cars" href="#" onclick="switchTab('cars')">🚗 Автомобілі</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link text-secondary" id="tab-gen" href="#" onclick="switchTab('gen')">🛠 Загальні послуги</a>
+                      </li>
+                    </ul>
+                </div>
+
+                <div class="card-body p-2 p-lg-3 bg-light">
+
+                    <div id="view-cars" class="row g-3">
+                        <div class="col-lg-6">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="text-primary m-0 fw-bold">Список авто</h5>
+                                <button class="btn btn-primary px-3 btn-sm" onclick="openCarModal()"><i class="bi bi-plus-lg"></i> Авто</button>
+                            </div>
+                            <input type="text" id="carSearchInput" class="form-control mb-2 border-primary" placeholder="Пошук автомобіля..." oninput="filterCars()">
+                            <div class="scrollable-area scrollable-cars">
+                                <ul class="list-group list-group-flush" id="carList"></ul>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 mt-4 mt-lg-0">
+                            <div id="carServicesArea" class="d-none">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="text-secondary m-0 fw-bold text-truncate" id="selectedCarTitle" style="max-width: 60%;">Послуги</h5>
+                                    <button class="btn btn-success btn-sm" onclick="openAddServiceModal()"><i class="bi bi-plus-lg"></i> Послуга</button>
+                                </div>
+                                <div class="scrollable-area scrollable-services p-1">
+                                    <table class="table table-hover align-middle">
+                                        <tbody id="servicesTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div id="noCarSelected" class="d-flex flex-column align-items-center justify-content-center text-muted h-100 py-5">
+                                <i class="bi bi-hand-index fs-1 mb-2"></i>
+                                <h6>Оберіть авто одним кліком</h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="view-gen" class="d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="text-dark m-0 fw-bold">Загальні послуги</h5>
+                            <button class="btn btn-dark px-4 btn-sm" onclick="openGenServiceModal()"><i class="bi bi-plus-lg"></i> Додати</button>
+                        </div>
+                        <input type="text" id="genServiceSearchInput" class="form-control mb-2 border-dark" placeholder="Пошук послуги..." oninput="filterGenServices()">
+                        <div class="scrollable-area scrollable-cars p-1">
+                            <table class="table table-hover align-middle fs-6">
+                                <tbody id="genServicesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-primary h-100">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="m-0 fw-bold"><i class="bi bi-receipt"></i> Чек</h5>
+                    <span class="badge bg-light text-primary fs-6" id="cartTotal">0 ₴</span>
+                </div>
+                <div class="card-body p-0 d-flex flex-column">
+                    <div class="scrollable-area scrollable-cart border-0 flex-grow-1">
+                        <ul class="list-group list-group-flush" id="cartList">
+                            <li class="list-group-item text-center text-muted border-0 mt-5 fs-6">Порожньо</li>
+                        </ul>
+                    </div>
+                    <div class="p-3 border-top bg-light">
+                        <button class="btn btn-success w-100 btn-lg shadow-sm fw-bold" id="saveInvoiceBtn" disabled>
+                            <i class="bi bi-printer"></i> ДРУК
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="carModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-primary text-white" id="carModalHeader"><h5 class="modal-title" id="carModalTitle">Додати нове авто</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="newCarInput" class="form-control form-control-lg" placeholder="Напр. Toyota Camry"></div><div class="modal-footer bg-light"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button><button type="button" class="btn btn-primary fw-bold" id="saveCarBtn" onclick="saveCar()">Зберегти</button></div></div></div></div>
+<div class="modal fade" id="confirmDeleteCarModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-danger"><div class="modal-header bg-danger text-white"><h5 class="modal-title">ВИДАЛИТИ АВТО?</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center py-4"><p class="fs-5">Ви хочете видалити <strong><span id="carToDeleteName"></span></strong>?</p></div><div class="modal-footer justify-content-center"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button><button type="button" class="btn btn-danger px-4" onclick="confirmDeleteCar()">ТАК, ВИДАЛИТИ</button></div></div></div></div>
+
+<div class="modal fade" id="serviceModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-success text-white" id="serviceModalHeader"><h5 class="modal-title" id="serviceModalTitle">Додати послугу</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="serviceNameInput" class="form-control mb-3" placeholder="Назва"><input type="number" id="servicePriceInput" class="form-control" placeholder="Ціна"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-success fw-bold" id="saveServiceBtn" onclick="saveService()">Зберегти</button></div></div></div></div>
+
+<div class="modal fade" id="genServiceModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5 class="modal-title">Додати загальну послугу</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="genServiceNameInput" class="form-control mb-3" placeholder="Назва"><input type="number" id="genServicePriceInput" class="form-control" placeholder="Ціна"></div><div class="modal-footer"><button class="btn btn-dark" onclick="saveGenService()">Зберегти</button></div></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let carsDb = {{ cars_db | tojson }};
+    let genServices = {{ general_services | tojson }};
+    let currentCar = "";
+    let carSearchQuery = "";
+    let genServiceSearchQuery = "";
+
+    let carMode = 'add';
+    let oldCarName = "";
+    let carToDelete = "";
+
+    // Нові змінні для специфічних послуг авто
+    let serviceMode = 'add';
+    let editServiceId = null;
+
+    const carModal = new bootstrap.Modal(document.getElementById('carModal'));
+    const deleteCarModal = new bootstrap.Modal(document.getElementById('confirmDeleteCarModal'));
+    const serviceModal = new bootstrap.Modal(document.getElementById('serviceModal'));
+    const genServiceModal = new bootstrap.Modal(document.getElementById('genServiceModal'));
+
+    window.onload = function() { renderCarList(); renderGenServices(); };
+
+    function switchTab(tab) {
+        const viewCars = document.getElementById('view-cars'); const viewGen = document.getElementById('view-gen');
+        const tabCars = document.getElementById('tab-cars'); const tabGen = document.getElementById('tab-gen');
+        if (tab === 'cars') {
+            viewCars.classList.remove('d-none'); viewGen.classList.add('d-none');
+            tabCars.classList.add('active', 'text-primary'); tabCars.classList.remove('text-secondary');
+            tabGen.classList.remove('active', 'text-primary'); tabGen.classList.add('text-secondary');
+        } else {
+            viewCars.classList.add('d-none'); viewGen.classList.remove('d-none');
+            tabGen.classList.add('active', 'text-primary'); tabGen.classList.remove('text-secondary');
+            tabCars.classList.remove('active', 'text-primary'); tabCars.classList.add('text-secondary');
+        }
+    }
+
+    function filterCars() { carSearchQuery = document.getElementById('carSearchInput').value.toLowerCase(); renderCarList(); }
+    function filterGenServices() { genServiceSearchQuery = document.getElementById('genServiceSearchInput').value.toLowerCase(); renderGenServices(); }
+
+    function renderCarList() {
+        const list = document.getElementById('carList'); list.innerHTML = '';
+        Object.keys(carsDb).forEach(name => {
+            if (!name.toLowerCase().includes(carSearchQuery)) return;
+            const li = document.createElement('li');
+            li.className = `list-group-item d-flex justify-content-between align-items-center car-item py-2 py-lg-3 ${currentCar === name ? 'active' : ''}`;
+            li.innerHTML = `
+                <span class="text-truncate" style="max-width: 60%;">${name}</span>
+                <div style="white-space: nowrap;">
+                    <button class="btn btn-outline-secondary btn-sm me-1" onclick="event.stopPropagation(); openEditCarModal('${name}')"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation(); openDeleteCarModal('${name}')"><i class="bi bi-trash"></i></button>
+                </div>`;
+            li.onclick = () => selectCar(name);
+            list.appendChild(li);
+        });
+    }
+
+    function selectCar(name) {
+        currentCar = name; renderCarList();
+        document.getElementById('noCarSelected').classList.add('d-none');
+        document.getElementById('carServicesArea').classList.remove('d-none');
+        document.getElementById('selectedCarTitle').textContent = name;
+        renderServices();
+    }
+
+    // Авто CRUD (Без змін)
+    function openCarModal() { carMode = 'add'; document.getElementById('carModalTitle').textContent = 'Додати авто'; document.getElementById('carModalHeader').className = 'modal-header bg-primary text-white'; document.getElementById('saveCarBtn').className = 'btn btn-primary fw-bold'; document.getElementById('newCarInput').value = ''; carModal.show(); }
+    function openEditCarModal(name) { carMode = 'edit'; oldCarName = name; document.getElementById('carModalTitle').textContent = 'Редагувати назву авто'; document.getElementById('carModalHeader').className = 'modal-header bg-warning text-dark'; document.getElementById('saveCarBtn').className = 'btn btn-warning fw-bold'; document.getElementById('newCarInput').value = name; carModal.show(); }
+    async function saveCar() {
+        const newName = document.getElementById('newCarInput').value.trim(); if (!newName) return;
+        if (carMode === 'add') {
+            let res = await fetch('/api/add_car', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: newName }) });
+            let data = await res.json();
+            if(data.success) { carsDb[newName] = []; carModal.hide(); renderCarList(); } else { alert(data.error); }
+        } else if (carMode === 'edit') {
+            let res = await fetch('/api/edit_car', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ old_name: oldCarName, new_name: newName }) });
+            let data = await res.json();
+            if(data.success) { carsDb[newName] = carsDb[oldCarName]; delete carsDb[oldCarName]; if (currentCar === oldCarName) selectCar(newName); carModal.hide(); renderCarList(); } else { alert(data.error); }
+        }
+    }
+    function openDeleteCarModal(name) { carToDelete = name; document.getElementById('carToDeleteName').textContent = name; deleteCarModal.show(); }
+    async function confirmDeleteCar() {
+        let res = await fetch('/api/delete_car', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: carToDelete }) });
+        if ((await res.json()).success) { delete carsDb[carToDelete]; if (currentCar === carToDelete) { currentCar = ""; document.getElementById('carServicesArea').classList.add('d-none'); document.getElementById('noCarSelected').classList.remove('d-none'); } deleteCarModal.hide(); renderCarList(); }
+    }
+
+
+    // ==========================================
+    // ОНОВЛЕНІ ПОСЛУГИ АВТО (З олівцем і смітником)
+    // ==========================================
+    function renderServices() {
+        const tbody = document.getElementById('servicesTableBody'); tbody.innerHTML = '';
+        carsDb[currentCar].forEach((s, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="fs-6">${s.posluga}</td>
+                <td class="text-end fw-bold fs-6">${s.cina} ₴</td>
+                <td class="text-end" style="white-space: nowrap;">
+                    <button class="btn btn-success btn-sm py-1 px-2 me-1" onclick="addToCart('${s.posluga}', ${s.cina})"><i class="bi bi-cart-plus"></i></button>
+                    <button class="btn btn-outline-secondary btn-sm py-1 px-2 me-1" onclick="openEditServiceModal(${s.id}, '${s.posluga}', ${s.cina}, ${index})"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-outline-danger btn-sm py-1 px-2" onclick="deleteService(${s.id}, ${index})"><i class="bi bi-trash"></i></button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openAddServiceModal() {
+        serviceMode = 'add';
+        document.getElementById('serviceModalTitle').textContent = 'Додати послугу';
+        document.getElementById('serviceModalHeader').className = 'modal-header bg-success text-white';
+        document.getElementById('saveServiceBtn').className = 'btn btn-success fw-bold';
+        document.getElementById('serviceNameInput').value='';
+        document.getElementById('servicePriceInput').value='';
+        serviceModal.show();
+    }
+
+    function openEditServiceModal(id, name, price, arrayIndex) {
+        serviceMode = 'edit';
+        editServiceId = id;
+        document.getElementById('serviceModalTitle').textContent = 'Редагувати послугу';
+        document.getElementById('serviceModalHeader').className = 'modal-header bg-warning text-dark';
+        document.getElementById('saveServiceBtn').className = 'btn btn-warning fw-bold';
+        document.getElementById('serviceNameInput').value = name;
+        document.getElementById('servicePriceInput').value = price;
+        serviceModal.show();
+    }
+
+    async function saveService() {
+        const name = document.getElementById('serviceNameInput').value; const price = document.getElementById('servicePriceInput').value;
+        if(!name || !price) return;
+
+        if (serviceMode === 'add') {
+            let res = await fetch('/api/add_service', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ car_name: currentCar, service_name: name, price: price }) });
+            let data = await res.json();
+            if (data.success) {
+                carsDb[currentCar].push({id: data.id, posluga: name, cina: price}); // Додаємо реальний ID з бази
+                serviceModal.hide(); renderServices();
+            }
+        } else if (serviceMode === 'edit') {
+            let res = await fetch('/api/edit_service', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id: editServiceId, name: name, price: price }) });
+            if ((await res.json()).success) {
+                // Оновлюємо дані в нашому списку на екрані
+                let serviceObj = carsDb[currentCar].find(s => s.id === editServiceId);
+                if(serviceObj) { serviceObj.posluga = name; serviceObj.cina = price; }
+                serviceModal.hide(); renderServices();
+            }
+        }
+    }
+
+    async function deleteService(id, index) {
+        if(!confirm("Видалити цю послугу?")) return;
+        let res = await fetch('/api/delete_service', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id: id }) });
+        if ((await res.json()).success) {
+            carsDb[currentCar].splice(index, 1);
+            renderServices();
+        }
+    }
+
+    // ==========================================
+    // ЗАГАЛЬНІ ПОСЛУГИ CRUD (Без змін)
+    // ==========================================
+    function renderGenServices() {
+        const tbody = document.getElementById('genServicesTableBody'); tbody.innerHTML = '';
+        genServices.forEach(gs => {
+            if (!gs.posluga.toLowerCase().includes(genServiceSearchQuery)) return;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="fs-6">${gs.posluga}</td>
+                <td class="text-end fw-bold fs-6">${gs.cina} ₴</td>
+                <td class="text-end" style="white-space: nowrap;">
+                    <button class="btn btn-success btn-sm py-1 px-2 me-1" onclick="addToCart('${gs.posluga}', ${gs.cina})"><i class="bi bi-cart-plus"></i></button>
+                    <button class="btn btn-outline-danger btn-sm py-1 px-2" onclick="deleteGenService(${gs.id})"><i class="bi bi-trash"></i></button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openGenServiceModal() { document.getElementById('genServiceNameInput').value=''; document.getElementById('genServicePriceInput').value=''; genServiceModal.show(); }
+    async function saveGenService() {
+        const name = document.getElementById('genServiceNameInput').value; const price = document.getElementById('genServicePriceInput').value;
+        if(!name || !price) return;
+        let res = await fetch('/api/add_general_service', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: name, price: price }) });
+        let data = await res.json();
+        if (data.success) { genServices.push({id: data.id, posluga: name, cina: price}); genServiceModal.hide(); renderGenServices(); }
+    }
+    async function deleteGenService(id) {
+        if(!confirm("Видалити цю послугу?")) return;
+        let res = await fetch('/api/delete_general_service', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id: id }) });
+        if ((await res.json()).success) { genServices = genServices.filter(gs => gs.id !== id); renderGenServices(); }
+    }
+
+    // --- ЧЕК ---
+    let cart = [];
+    function addToCart(name, price) { cart.push({name, price}); renderCart(); }
+    function renderCart() {
+        const list = document.getElementById('cartList'); const totalEl = document.getElementById('cartTotal');
+        list.innerHTML = ''; let total = 0;
+        if(cart.length === 0) { list.innerHTML = '<li class="list-group-item text-center text-muted border-0 mt-5 fs-6">Порожньо</li>'; document.getElementById('saveInvoiceBtn').disabled = true; totalEl.textContent = "0 ₴"; return; }
+
+        cart.forEach((item, index) => {
+            total += parseInt(item.price);
+            const li = document.createElement('li');
+            li.className = "list-group-item d-flex justify-content-between align-items-center border-0 px-2 py-3 border-bottom fs-6";
+            li.innerHTML = `<span class="text-truncate" style="max-width:60%">${item.name}</span> <span class="fw-bold" style="white-space:nowrap">${item.price} ₴ <i class="bi bi-x-circle text-danger ms-2" style="cursor:pointer;" onclick="cart.splice(${index},1);renderCart()"></i></span>`;
+            list.appendChild(li);
+        });
+        totalEl.textContent = total + " ₴";
+        document.getElementById('saveInvoiceBtn').disabled = false;
+    }
+</script>
+</body>
+</html>
