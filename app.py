@@ -1,3 +1,4 @@
+import re  # ДОДАНО: Бібліотека для сканування тексту за шаблонами
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
@@ -6,91 +7,113 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-class Car(db.Model):
+
+class Brand(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
-    services = db.relationship('Service', backref='car', lazy=True, cascade="all, delete-orphan")
+    models = db.relationship('CarModel', backref='brand', lazy=True, cascade="all, delete-orphan")
+
+
+class CarModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    brand_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
+    services = db.relationship('Service', backref='model', lazy=True, cascade="all, delete-orphan")
+
 
 class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Integer, nullable=False)
-    car_id = db.Column(db.Integer, db.ForeignKey('car.id'), nullable=False)
+    model_id = db.Column(db.Integer, db.ForeignKey('car_model.id'), nullable=False)
+
 
 class GeneralService(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Integer, nullable=False)
 
+
 with app.app_context():
     db.create_all()
 
+
 @app.route('/')
 def home():
-    all_cars = Car.query.all()
+    all_brands = Brand.query.all()
     gen_services = GeneralService.query.all()
-    cars_db_dict = {car.name: [{"id": s.id, "posluga": s.name, "cina": s.price} for s in car.services] for car in all_cars}
+
+    db_dict = {}
+    for b in all_brands:
+        db_dict[b.name] = {}
+        for m in b.models:
+            db_dict[b.name][m.name] = [{"id": s.id, "posluga": s.name, "cina": s.price} for s in m.services]
+
     general_services_list = [{"id": gs.id, "posluga": gs.name, "cina": gs.price} for gs in gen_services]
-    return render_template('index.html', cars_db=cars_db_dict, general_services=general_services_list)
+    return render_template('index.html', db_dict=db_dict, general_services=general_services_list)
 
-@app.route('/api/add_car', methods=['POST'])
-def add_car():
+
+# ==========================================
+# НОВИЙ МІСТ: МАСОВИЙ ІМПОРТ З ШІ
+# ==========================================
+@app.route('/api/bulk_import', methods=['POST'])
+def bulk_import():
     data = request.get_json()
-    if Car.query.filter_by(name=data.get('name')).first():
-        return jsonify({"success": False, "error": "Авто вже є в базі!"})
-    new_car = Car(name=data.get('name'))
-    db.session.add(new_car)
-    db.session.commit()
-    return jsonify({"success": True})
+    text = data.get('text', '')
 
-@app.route('/api/delete_car', methods=['POST'])
-def delete_car():
-    car = Car.query.filter_by(name=request.get_json().get('name')).first()
-    if car:
-        db.session.delete(car)
-        db.session.commit()
-        return jsonify({"success": True})
-    return jsonify({"success": False})
+    # МАГІЯ ТУТ: Шукаємо шаблон "Марка" {Модель} [Послуга] |Ціна|
+    pattern = r'"([^"]+)"\s*\{([^}]+)\}\s*\[([^\]]+)\]\s*\|\s*(\d+)\s*\|'
+    matches = re.findall(pattern, text)
 
-@app.route('/api/edit_car', methods=['POST'])
-def edit_car():
-    data = request.get_json()
-    old_name = data.get('old_name')
-    new_name = data.get('new_name')
-    car = Car.query.filter_by(name=old_name).first()
-    if car:
-        if Car.query.filter_by(name=new_name).first() and old_name != new_name:
-            return jsonify({"success": False, "error": "Авто з такою назвою вже існує!"})
-        car.name = new_name
-        db.session.commit()
-        return jsonify({"success": True})
-    return jsonify({"success": False, "error": "Авто не знайдено"})
+    if not matches:
+        return jsonify({"success": False, "error": "Не знайдено жодного запису у правильному форматі."})
+
+    added_count = 0
+    for b_name, m_name, s_name, price_str in matches:
+        b_name = b_name.strip()
+        m_name = m_name.strip()
+        s_name = s_name.strip()
+        price = int(price_str.strip())
+
+        # 1. Перевіряємо, чи є вже така марка, якщо ні - створюємо
+        brand = Brand.query.filter_by(name=b_name).first()
+        if not brand:
+            brand = Brand(name=b_name)
+            db.session.add(brand)
+            db.session.flush()  # Зберігаємо тимчасово, щоб отримати ID
+
+        # 2. Перевіряємо модель
+        model = CarModel.query.filter_by(name=m_name, brand_id=brand.id).first()
+        if not model:
+            model = CarModel(name=m_name, brand_id=brand.id)
+            db.session.add(model)
+            db.session.flush()
+
+        # 3. Перевіряємо, чи немає вже точно такої ж послуги (Захист від дублів!)
+        service = Service.query.filter_by(name=s_name, model_id=model.id).first()
+        if not service:
+            new_srv = Service(name=s_name, price=price, model_id=model.id)
+            db.session.add(new_srv)
+            added_count += 1  # Рахуємо тільки успішно додані НОВІ послуги
+
+    db.session.commit()  # Фіксуємо всі зміни в базу даних
+    return jsonify({"success": True, "added": added_count})
+
 
 @app.route('/api/add_service', methods=['POST'])
 def add_service():
     data = request.get_json()
-    car = Car.query.filter_by(name=data.get('car_name')).first()
-    if car:
-        new_service = Service(name=data['service_name'], price=data['price'], car_id=car.id)
-        db.session.add(new_service)
-        db.session.commit()
-        # Повертаємо ID нової послуги, щоб JS міг її одразу редагувати/видаляти
-        return jsonify({"success": True, "id": new_service.id})
+    brand = Brand.query.filter_by(name=data.get('brand')).first()
+    if brand:
+        model = CarModel.query.filter_by(name=data.get('model'), brand_id=brand.id).first()
+        if model:
+            new_service = Service(name=data['service_name'], price=data['price'], model_id=model.id)
+            db.session.add(new_service)
+            db.session.commit()
+            return jsonify({"success": True, "id": new_service.id})
     return jsonify({"success": False})
 
-# НОВИЙ МІСТ: РЕДАГУВАННЯ КОНКРЕТНОЇ ПОСЛУГИ
-@app.route('/api/edit_service', methods=['POST'])
-def edit_service():
-    data = request.get_json()
-    service = Service.query.get(data.get('id'))
-    if service:
-        service.name = data.get('name')
-        service.price = data.get('price')
-        db.session.commit()
-        return jsonify({"success": True})
-    return jsonify({"success": False})
 
-# НОВИЙ МІСТ: ВИДАЛЕННЯ КОНКРЕТНОЇ ПОСЛУГИ
 @app.route('/api/delete_service', methods=['POST'])
 def delete_service():
     service = Service.query.get(request.get_json().get('id'))
@@ -100,6 +123,7 @@ def delete_service():
         return jsonify({"success": True})
     return jsonify({"success": False})
 
+
 @app.route('/api/add_general_service', methods=['POST'])
 def add_gen_service():
     data = request.get_json()
@@ -107,6 +131,7 @@ def add_gen_service():
     db.session.add(new_gs)
     db.session.commit()
     return jsonify({"success": True, "id": new_gs.id})
+
 
 @app.route('/api/delete_general_service', methods=['POST'])
 def delete_gen_service():
@@ -116,6 +141,7 @@ def delete_gen_service():
         db.session.commit()
         return jsonify({"success": True})
     return jsonify({"success": False})
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
