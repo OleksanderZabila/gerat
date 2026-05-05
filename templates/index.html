@@ -292,7 +292,7 @@
         <div class="cart-foot">
             <div class="d-flex gap-2">
                 <button class="btn btn-ghost flex-fill" id="clearBtn" onclick="clearCart()" disabled><i class="bi bi-trash me-1"></i>Очистити</button>
-                <button class="btn btn-ghost flex-fill" id="saveBtn"  onclick="openModal('saveOrderModal')" disabled><i class="bi bi-save me-1"></i>Зберегти</button>
+                <button class="btn btn-ghost flex-fill" id="saveBtn"  onclick="openSaveOrderModal()" disabled><i class="bi bi-save me-1"></i>Зберегти</button>
             </div>
             <button class="btn btn-accent w-100 fw-bold" id="printBtn" onclick="printInvoice()" disabled>
                 <i class="bi bi-printer me-2"></i>ДРУКУВАТИ
@@ -364,8 +364,14 @@
 <div class="modal fade" id="saveOrderModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-save me-2" style="color:var(--accent)"></i>Зберегти замовлення</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body p-3">
-        <div class="mb-3"><label class="form-label">Ім'я клієнта</label><input id="orderClient" class="form-control" placeholder="Іванов Іван"></div>
-        <div class="mb-3"><label class="form-label">Авто клієнта</label><input id="orderCar" class="form-control" placeholder="Ford Focus 2018, AA1234BB"></div>
+        <div class="mb-3">
+            <label class="form-label">Клієнт <span style="color:var(--muted)">(оберіть існуючого або введіть вручну)</span></label>
+            <select id="orderClientSelect" class="form-select mb-2" onchange="fillClientFromSelect()">
+                <option value="">— новий / без клієнта —</option>
+            </select>
+            <input id="orderClient" class="form-control" placeholder="Або введіть ім'я вручну">
+        </div>
+        <div class="mb-3"><label class="form-label">Авто</label><input id="orderCar" class="form-control" placeholder="Ford Focus 2018, AA1234BB"></div>
         <div><label class="form-label">Примітки</label><textarea id="orderNotes" class="form-control" rows="2" placeholder="Додатковий опис..."></textarea></div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="saveOrder()">Зберегти</button></div>
@@ -840,15 +846,52 @@ async function delOrder(id) {
     const res = await api('/api/delete_order', { id });
     if (res.success) { toast('Замовлення видалено'); loadOrders(); }
 }
+function fillClientFromSelect() {
+    const sel = document.getElementById('orderClientSelect');
+    const id = parseInt(sel.value);
+    if (!id) return;
+    const cl = allClients.find(c => c.id === id);
+    if (cl) {
+        document.getElementById('orderClient').value = cl.name;
+        document.getElementById('orderCar').value = cl.car_info || '';
+    }
+}
+
+function openSaveOrderModal() {
+    // populate client dropdown with current clients list
+    const sel = document.getElementById('orderClientSelect');
+    sel.innerHTML = '<option value="">— новий / без клієнта —</option>';
+    allClients.forEach(cl => {
+        const opt = document.createElement('option');
+        opt.value = cl.id;
+        opt.textContent = cl.name + (cl.car_info ? ' · ' + cl.car_info : '');
+        sel.appendChild(opt);
+    });
+    // clear fields
+    sel.value = '';
+    document.getElementById('orderClient').value = '';
+    document.getElementById('orderCar').value = '';
+    document.getElementById('orderNotes').value = '';
+    openModal('saveOrderModal');
+}
+
 async function saveOrder() {
+    const sel = document.getElementById('orderClientSelect');
+    const clientId = parseInt(sel.value) || null;
     const client = document.getElementById('orderClient').value.trim();
     const carInfo = document.getElementById('orderCar').value.trim();
     const notes = document.getElementById('orderNotes').value.trim();
     const total = cart.reduce((s,i)=>s+i.p, 0);
-    const res = await api('/api/save_order', { client_name: client, car_info: carInfo, total, items: JSON.stringify(cart), notes });
+    const res = await api('/api/save_order', {
+        client_id: clientId,
+        client_name: client,
+        car_info: carInfo,
+        total,
+        items: JSON.stringify(cart),
+        notes
+    });
     if (res.success) {
         closeModal('saveOrderModal');
-        document.getElementById('orderClient').value=''; document.getElementById('orderCar').value=''; document.getElementById('orderNotes').value='';
         toast('Замовлення збережено!');
     }
 }
