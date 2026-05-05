@@ -53,11 +53,11 @@
         .scroll-box { overflow-y: auto; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-base); }
         @media (min-width: 992px) {
             body { overflow: hidden; }
-            .scroll-cars  { height: calc(100vh - 312px); }
-            .scroll-srv   { height: calc(100vh - 280px); }
-            .scroll-gen   { height: calc(100vh - 257px); }
-            .scroll-cart  { height: calc(100vh - 334px); }
-            .scroll-list  { height: calc(100vh - 257px); }
+            .scroll-cars  { height: calc(100vh - 334px); }
+            .scroll-srv   { height: calc(100vh - 302px); }
+            .scroll-gen   { height: calc(100vh - 279px); }
+            .scroll-cart  { height: calc(100vh - 356px); }
+            .scroll-list  { height: calc(100vh - 279px); }
         }
         @media (max-width: 991px) { .scroll-cars,.scroll-srv,.scroll-gen,.scroll-cart,.scroll-list { max-height: 320px; } }
 
@@ -763,15 +763,15 @@ async function runImport() {
 
 // ── ORDERS ─────────────────────────────────────────────────────────────────
 async function loadOrders() {
-    renderOrdersList([]);
+    document.getElementById('ordersList').innerHTML='<div class="empty"><i class="bi bi-hourglass-split"></i><p>Завантаження...</p></div>';
     try {
         allOrders = await (await fetch('/api/orders')).json();
         renderOrdersList(allOrders);
-    } catch { document.getElementById('ordersList').innerHTML='<div class="empty"><i class="bi bi-exclamation-triangle"></i><p>Помилка</p></div>'; }
+    } catch { document.getElementById('ordersList').innerHTML='<div class="empty"><i class="bi bi-exclamation-triangle"></i><p>Помилка завантаження</p></div>'; }
 }
 function filterOrders() {
     const q = document.getElementById('orderSearch').value.toLowerCase();
-    renderOrdersList(allOrders.filter(o => (o.client_name+o.car_info+o.notes).toLowerCase().includes(q)));
+    renderOrdersList(allOrders.filter(o => ((o.client_name||'')+(o.car_info||'')+(o.notes||'')).toLowerCase().includes(q)));
 }
 function renderOrdersList(orders) {
     const c = document.getElementById('ordersList');
@@ -857,8 +857,10 @@ function fillClientFromSelect() {
     }
 }
 
-function openSaveOrderModal() {
-    // populate client dropdown with current clients list
+async function openSaveOrderModal() {
+    if (!allClients.length) {
+        try { allClients = await (await fetch('/api/clients')).json(); } catch {}
+    }
     const sel = document.getElementById('orderClientSelect');
     sel.innerHTML = '<option value="">— новий / без клієнта —</option>';
     allClients.forEach(cl => {
@@ -867,7 +869,6 @@ function openSaveOrderModal() {
         opt.textContent = cl.name + (cl.car_info ? ' · ' + cl.car_info : '');
         sel.appendChild(opt);
     });
-    // clear fields
     sel.value = '';
     document.getElementById('orderClient').value = '';
     document.getElementById('orderCar').value = '';
@@ -892,20 +893,23 @@ async function saveOrder() {
     });
     if (res.success) {
         closeModal('saveOrderModal');
+        clearCart();
         toast('Замовлення збережено!');
+        if (document.getElementById('tab-orders').classList.contains('active')) loadOrders();
     }
 }
 
 // ── CLIENTS ────────────────────────────────────────────────────────────────
 async function loadClients() {
+    document.getElementById('clientsList').innerHTML='<div class="empty"><i class="bi bi-hourglass-split"></i><p>Завантаження...</p></div>';
     try {
         allClients = await (await fetch('/api/clients')).json();
         renderClientsList(allClients);
-    } catch { document.getElementById('clientsList').innerHTML='<div class="empty"><i class="bi bi-exclamation-triangle"></i><p>Помилка</p></div>'; }
+    } catch { document.getElementById('clientsList').innerHTML='<div class="empty"><i class="bi bi-exclamation-triangle"></i><p>Помилка завантаження</p></div>'; }
 }
 function filterClients() {
     const q = document.getElementById('clientSearch').value.toLowerCase();
-    renderClientsList(allClients.filter(c => (c.name+c.phone+c.car_info+c.notes).toLowerCase().includes(q)));
+    renderClientsList(allClients.filter(c => ((c.name||'')+(c.phone||'')+(c.car_info||'')+(c.notes||'')).toLowerCase().includes(q)));
 }
 function renderClientsList(clients) {
     const c = document.getElementById('clientsList');
