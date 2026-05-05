@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Магазин — СТО «Герат»</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-base:#0d1117; --bg-card:#161b22; --bg-item:#1c2128; --bg-hover:#262c36;
+            --accent:#f97316; --accent-dim:rgba(249,115,22,.12);
+            --success:#22c55e; --danger:#ef4444; --warning:#f59e0b; --info:#3b82f6;
+            --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+        }
+        *,*::before,*::after{box-sizing:border-box;}
+        html,body{height:100%;margin:0;}
+        body{background:var(--bg-base);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;}
+        ::-webkit-scrollbar{width:5px;height:5px;}
+        ::-webkit-scrollbar-track{background:transparent;}
+        ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+        /* ── Topbar ── */
+        .topbar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:12px;height:46px;}
+        .topbar-logo{color:var(--accent);font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;}
+        .mode-switcher{display:flex;gap:3px;background:var(--bg-item);border:1px solid var(--border);border-radius:7px;padding:3px;}
+        .mode-btn{padding:4px 12px;border-radius:5px;border:none;background:none;color:var(--muted);font-size:.8rem;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px;transition:background .12s,color .12s;}
+        .mode-btn:hover{color:var(--text);}
+        .mode-btn.active{background:var(--accent);color:#fff;}
+        .topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
+        .topbar-user{display:flex;align-items:center;gap:7px;font-size:.83rem;}
+        .role-badge{font-size:.7rem;padding:2px 8px;border-radius:9px;font-weight:600;}
+        .role-admin{background:rgba(249,115,22,.18);color:var(--accent);}
+        .role-mechanic{background:rgba(59,130,246,.18);color:var(--info);}
+        .role-cashier{background:rgba(34,197,94,.18);color:var(--success);}
+        .btn-icon{background:none;border:none;padding:4px 6px;border-radius:5px;cursor:pointer;transition:background .12s;line-height:1;color:var(--muted);}
+        .btn-icon:hover{background:var(--bg-hover);color:var(--text);}
+
+        /* ── Layout ── */
+        .main-grid{display:grid;grid-template-columns:1fr 310px;gap:14px;padding:14px 20px 36px;}
+        @media(max-width:991px){.main-grid{grid-template-columns:1fr;}}
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+        .panel-head{background:var(--bg-item);border-bottom:1px solid var(--border);padding:0 14px;display:flex;align-items:flex-end;}
+        .tab-btn{padding:10px 13px;border:none;border-bottom:2px solid transparent;background:none;color:var(--muted);font-size:.84rem;cursor:pointer;transition:color .15s,border-color .15s;white-space:nowrap;}
+        .tab-btn:hover{color:var(--text);}
+        .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+        .tab-btn i{margin-right:4px;}
+        .tab-pane{display:none;padding:14px;}
+        .tab-pane.active{display:block;}
+        .sec-title{font-size:.71rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px;}
+
+        /* ── Forms ── */
+        .form-control,.form-select{background:var(--bg-item)!important;border:1px solid var(--border)!important;color:var(--text)!important;border-radius:6px;font-size:.875rem;}
+        .form-control:focus,.form-select:focus{border-color:var(--accent)!important;box-shadow:0 0 0 2px var(--accent-dim)!important;}
+        .form-control::placeholder{color:var(--muted)!important;}
+        .form-label{color:var(--muted);font-size:.77rem;margin-bottom:4px;}
+        .btn{border-radius:6px;font-size:.82rem;padding:5px 11px;}
+        .btn-accent{background:var(--accent);color:#fff;border:none;}
+        .btn-accent:hover{background:#ea6c0a;color:#fff;}
+        .btn-ok{background:var(--success);color:#fff;border:none;}
+        .btn-ok:hover{background:#16a34a;color:#fff;}
+        .btn-ghost{background:var(--bg-hover);color:var(--text);border:1px solid var(--border);}
+        .btn-ghost:hover{background:#333;color:var(--text);}
+        .search-wrap{position:relative;margin-bottom:10px;}
+        .search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+        .search-wrap input{padding-left:32px;}
+
+        /* ── Category pills ── */
+        .cat-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+        .cat-pill{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg-item);color:var(--muted);font-size:.78rem;cursor:pointer;transition:all .12s;}
+        .cat-pill:hover{border-color:var(--accent);color:var(--text);}
+        .cat-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+        /* ── Product rows ── */
+        .prod-row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);gap:10px;cursor:pointer;transition:background .12s;}
+        .prod-row:hover{background:var(--bg-hover);}
+        .prod-row:last-child{border-bottom:none;}
+        .prod-info{flex:1;min-width:0;}
+        .prod-name{font-size:.87rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .prod-meta{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap;}
+        .prod-price{color:var(--accent);font-weight:700;font-size:.9rem;white-space:nowrap;margin-right:4px;}
+        .stock-ok{background:rgba(34,197,94,.12);color:var(--success);font-size:.72rem;padding:2px 7px;border-radius:9px;}
+        .stock-low{background:rgba(245,158,11,.12);color:var(--warning);font-size:.72rem;padding:2px 7px;border-radius:9px;}
+        .stock-out{background:rgba(239,68,68,.12);color:var(--danger);font-size:.72rem;padding:2px 7px;border-radius:9px;}
+        .tag-cat{background:var(--bg-hover);color:var(--muted);font-size:.7rem;padding:2px 7px;border-radius:9px;}
+        .add-btn{background:var(--success);border:none;color:#fff;border-radius:6px;padding:5px 10px;font-size:.85rem;cursor:pointer;flex-shrink:0;transition:background .12s;}
+        .add-btn:hover{background:#16a34a;}
+        .add-btn:disabled{background:var(--bg-hover);color:var(--muted);cursor:not-allowed;}
+
+        /* ── Inventory table ── */
+        .inv-table{width:100%;border-collapse:collapse;}
+        .inv-table tr{border-bottom:1px solid var(--border);}
+        .inv-table tr:hover{background:var(--bg-hover);}
+        .inv-table td,.inv-table th{padding:8px 12px;font-size:.83rem;}
+        .inv-table th{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;background:var(--bg-item);}
+        .qty-ctrl{display:flex;align-items:center;gap:4px;}
+        .qty-btn{background:var(--bg-hover);border:1px solid var(--border);color:var(--text);border-radius:5px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;line-height:1;}
+        .qty-btn:hover{background:var(--border);}
+        .qty-val{min-width:28px;text-align:center;font-weight:600;font-size:.85rem;}
+
+        /* ── Sales list ── */
+        .list-row{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+        .list-row:hover{background:var(--bg-hover);}
+        .list-name{font-weight:600;font-size:.87rem;}
+        .list-sub{color:var(--muted);font-size:.76rem;margin-top:2px;}
+
+        /* ── Cart ── */
+        .cart-panel{display:flex;flex-direction:column;}
+        .cart-head{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.04));border-bottom:1px solid rgba(34,197,94,.25);padding:11px 16px;display:flex;justify-content:space-between;align-items:center;}
+        .cart-title{font-weight:700;font-size:.92rem;}
+        .cart-total{color:var(--success);font-weight:700;font-size:1.05rem;}
+        .cart-item{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:8px;}
+        .cart-item-name{flex:1;font-size:.83rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .cart-item-price{color:var(--success);font-weight:600;font-size:.83rem;white-space:nowrap;}
+        .cart-item-rm{color:var(--danger);cursor:pointer;opacity:.5;font-size:.85rem;transition:opacity .15s;flex-shrink:0;}
+        .cart-item-rm:hover{opacity:1;}
+        .cart-foot{padding:11px;border-top:1px solid var(--border);background:var(--bg-item);display:flex;flex-direction:column;gap:7px;}
+        .qty-ctrl-sm{display:flex;align-items:center;gap:3px;flex-shrink:0;}
+        .qb{background:var(--bg-hover);border:1px solid var(--border);color:var(--text);border-radius:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;line-height:1;}
+        .qb:hover{background:var(--border);}
+        .qv{min-width:22px;text-align:center;font-size:.82rem;font-weight:600;}
+
+        /* ── Scroll boxes ── */
+        .scroll-box{overflow-y:auto;border:1px solid var(--border);border-radius:7px;background:var(--bg-base);}
+        @media(min-width:992px){
+            body{overflow:hidden;}
+            .scroll-prod{height:calc(100vh - 338px);}
+            .scroll-sales{height:calc(100vh - 278px);}
+            .scroll-inv{height:calc(100vh - 310px);}
+            .scroll-cart{height:calc(100vh - 356px);}
+        }
+        @media(max-width:991px){.scroll-prod,.scroll-sales,.scroll-inv,.scroll-cart{max-height:320px;}}
+
+        /* ── Modals ── */
+        .modal-content{background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:10px;}
+        .modal-header{background:var(--bg-item);border-bottom:1px solid var(--border);padding:12px 16px;}
+        .modal-footer{border-top:1px solid var(--border);padding:10px 16px;}
+        .btn-close{filter:invert(1) brightness(.8);}
+        .modal-title{font-size:.95rem;font-weight:600;}
+
+        /* ── Toast ── */
+        .toast-box{position:fixed;top:14px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:7px;}
+        .toast-item{background:var(--bg-item);border:1px solid var(--border);border-radius:8px;padding:9px 13px;display:flex;align-items:center;gap:9px;min-width:220px;max-width:310px;box-shadow:0 4px 16px rgba(0,0,0,.4);animation:fadeInR .18s ease;}
+        .toast-item.t-success{border-left:3px solid var(--success);}
+        .toast-item.t-error{border-left:3px solid var(--danger);}
+        .toast-item.t-info{border-left:3px solid var(--info);}
+        .toast-msg{flex:1;font-size:.83rem;}
+        @keyframes fadeInR{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+
+        .empty{text-align:center;padding:28px 16px;color:var(--muted);}
+        .empty i{font-size:2rem;opacity:.4;display:block;margin-bottom:8px;}
+        .empty p{margin:0;font-size:.83rem;}
+
+        /* ── Status bar ── */
+        .statusbar{position:fixed;bottom:0;left:0;right:0;height:22px;background:var(--bg-card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:.7rem;color:var(--muted);z-index:100;user-select:none;}
+        .statusbar-ver{color:var(--accent);font-weight:600;}
+
+        /* ── Print ── */
+        #print-area{display:none;}
+        @media print{body>*:not(#print-area){display:none!important;}#print-area{display:block!important;font-family:Arial,sans-serif;}.statusbar{display:none!important;}}
+    </style>
+</head>
+<body>
+<div class="toast-box" id="toastBox"></div>
+
+<!-- Topbar -->
+<div class="topbar">
+    <a class="topbar-logo" href="/shop"><i class="bi bi-shop"></i> Магазин</a>
+    {% if user.role == 'admin' %}
+    <div class="mode-switcher">
+        <a href="/" class="mode-btn"><i class="bi bi-car-front"></i> CRM</a>
+        <a href="/shop" class="mode-btn active"><i class="bi bi-shop"></i> Магазин</a>
+    </div>
+    {% endif %}
+    <div class="topbar-right">
+        <div class="topbar-user">
+            <i class="bi bi-person-circle" style="color:var(--muted);font-size:1.1rem;"></i>
+            <span>{{ user.display_name or user.username }}</span>
+            <span class="role-badge role-{{ user.role }}">{{ {'admin':'Адмін','mechanic':'Механік','cashier':'Касир'}[user.role] }}</span>
+        </div>
+        {% if user.role == 'admin' %}
+        <button class="btn-icon" onclick="openModal('usersModal')" title="Користувачі"><i class="bi bi-people" style="color:var(--accent)"></i></button>
+        {% endif %}
+        <button class="btn-icon" onclick="openModal('changePwdModal')" title="Змінити пароль"><i class="bi bi-key"></i></button>
+        <a href="/logout" class="btn-icon" title="Вийти"><i class="bi bi-box-arrow-right" style="color:var(--danger)"></i></a>
+    </div>
+</div>
+
+<!-- Main grid -->
+<div class="main-grid">
+    <!-- LEFT: tabs -->
+    <div class="panel">
+        <div class="panel-head">
+            <button class="tab-btn active" id="tab-catalog" onclick="switchTab('catalog')"><i class="bi bi-grid"></i>Каталог</button>
+            <button class="tab-btn" id="tab-sales" onclick="switchTab('sales')"><i class="bi bi-receipt"></i>Продажі</button>
+            <button class="tab-btn" id="tab-inv" onclick="switchTab('inv')"><i class="bi bi-boxes"></i>Склад</button>
+        </div>
+
+        <!-- Каталог -->
+        <div class="tab-pane active" id="pane-catalog">
+            <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" class="form-control" id="prodSearch" placeholder="Пошук товару..." oninput="filterCatalog()">
+            </div>
+            <div class="cat-pills" id="catPills"></div>
+            <div class="scroll-box scroll-prod" id="prodList"></div>
+        </div>
+
+        <!-- Продажі -->
+        <div class="tab-pane" id="pane-sales">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="sec-title">Історія продажів</span>
+                <button class="btn btn-ghost" onclick="loadSales()"><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" class="form-control" id="saleSearch" placeholder="Пошук по клієнту або касиру..." oninput="filterSales()">
+            </div>
+            <div class="scroll-box scroll-sales" id="salesList"></div>
+        </div>
+
+        <!-- Склад -->
+        <div class="tab-pane" id="pane-inv">
+            <div class="d-flex gap-2 mb-2 flex-wrap">
+                <button class="btn btn-accent" onclick="openModal('addProdModal')"><i class="bi bi-plus-lg me-1"></i>Товар</button>
+                <button class="btn btn-ghost" onclick="openModal('addCatModal')"><i class="bi bi-tag me-1"></i>Категорія</button>
+                <div class="search-wrap flex-fill mb-0" style="margin-bottom:0!important;">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="invSearch" placeholder="Пошук..." oninput="filterInv()">
+                </div>
+            </div>
+            <div class="scroll-box scroll-inv">
+                <table class="inv-table">
+                    <thead><tr>
+                        <th>Назва</th><th>Категорія</th>
+                        <th style="text-align:right">Ціна</th>
+                        <th style="text-align:center">Склад</th>
+                        <th></th>
+                    </tr></thead>
+                    <tbody id="invTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Cart -->
+    <div class="panel cart-panel">
+        <div class="cart-head">
+            <span class="cart-title"><i class="bi bi-cart3 me-2" style="color:var(--success)"></i>Продаж</span>
+            <span class="cart-total" id="cartTotal">0 грн</span>
+        </div>
+        <div class="scroll-box scroll-cart" id="cartList" style="border:none;border-radius:0;flex:1;"></div>
+        <div class="cart-foot">
+            <div class="d-flex gap-2">
+                <button class="btn btn-ghost flex-fill" id="clearBtn" onclick="clearCart()" disabled><i class="bi bi-trash me-1"></i>Очистити</button>
+                <button class="btn btn-ghost flex-fill" id="saveBtn" onclick="openModal('saveSaleModal')" disabled><i class="bi bi-save me-1"></i>Зберегти</button>
+            </div>
+            <button class="btn btn-ok w-100 fw-bold" id="printBtn" onclick="printReceipt()" disabled>
+                <i class="bi bi-printer me-2"></i>ДРУКУВАТИ ЧЕК
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================== MODALS ======================== -->
+
+<!-- Add category -->
+<div class="modal fade" id="addCatModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-tag me-2" style="color:var(--accent)"></i>Нова категорія</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3"><label class="form-label">Назва</label><input id="catName" class="form-control" placeholder="Мастила, Гальма..."></div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="addCategory()">Зберегти</button></div>
+</div></div></div>
+
+<!-- Add product -->
+<div class="modal fade" id="addProdModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-plus-circle me-2" style="color:var(--success)"></i>Новий товар</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-2"><label class="form-label">Назва *</label><input id="apName" class="form-control" placeholder="Моторне масло 5W30"></div>
+        <div class="mb-2"><label class="form-label">Категорія</label>
+            <select id="apCat" class="form-select"><option value="">— без категорії —</option></select>
+        </div>
+        <div class="row g-2 mb-2">
+            <div class="col-6"><label class="form-label">Ціна продажу (грн)</label><input id="apSell" type="number" class="form-control" placeholder="500" min="0"></div>
+            <div class="col-6"><label class="form-label">Ціна закупки (грн)</label><input id="apBuy" type="number" class="form-control" placeholder="300" min="0"></div>
+        </div>
+        <div class="row g-2">
+            <div class="col-6"><label class="form-label">Кількість</label><input id="apQty" type="number" class="form-control" placeholder="0" min="0"></div>
+            <div class="col-6"><label class="form-label">Штрихкод</label><input id="apBarcode" class="form-control" placeholder="Необов'язково"></div>
+        </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-ok" onclick="addProduct()">Додати</button></div>
+</div></div></div>
+
+<!-- Edit product -->
+<div class="modal fade" id="editProdModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-pencil me-2" style="color:var(--warning)"></i>Редагувати товар</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-2"><label class="form-label">Назва</label><input id="epName" class="form-control"></div>
+        <div class="mb-2"><label class="form-label">Категорія</label>
+            <select id="epCat" class="form-select"><option value="">— без категорії —</option></select>
+        </div>
+        <div class="row g-2 mb-2">
+            <div class="col-6"><label class="form-label">Ціна продажу</label><input id="epSell" type="number" class="form-control" min="0"></div>
+            <div class="col-6"><label class="form-label">Ціна закупки</label><input id="epBuy" type="number" class="form-control" min="0"></div>
+        </div>
+        <div class="row g-2">
+            <div class="col-6"><label class="form-label">Кількість</label><input id="epQty" type="number" class="form-control" min="0"></div>
+            <div class="col-6"><label class="form-label">Штрихкод</label><input id="epBarcode" class="form-control"></div>
+        </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn" style="background:var(--warning);color:#000;" id="editProdSaveBtn">Зберегти</button></div>
+</div></div></div>
+
+<!-- Save sale -->
+<div class="modal fade" id="saveSaleModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-bag-check me-2" style="color:var(--success)"></i>Оформити продаж</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-3"><label class="form-label">Клієнт <span style="color:var(--muted)">(необов'язково)</span></label><input id="saleClient" class="form-control" placeholder="Ім'я або контакт"></div>
+        <div><label class="form-label">Примітки</label><textarea id="saleNotes" class="form-control" rows="2" placeholder="Додатково..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-ok" onclick="saveSale()"><i class="bi bi-check-lg me-1"></i>Продати</button></div>
+</div></div></div>
+
+<!-- Sale detail -->
+<div class="modal fade" id="saleDetailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-receipt me-2" style="color:var(--success)"></i>Деталі продажу</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-0" id="saleDetailBody"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Закрити</button></div>
+</div></div></div>
+
+<!-- Users modal (admin) -->
+<div class="modal fade" id="usersModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-people me-2" style="color:var(--accent)"></i>Користувачі</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="sec-title" style="margin:0">Список користувачів</span>
+            <button class="btn btn-accent btn-sm" onclick="openModal('addUserModal')"><i class="bi bi-person-plus me-1"></i>Додати</button>
+        </div>
+        <div id="usersList"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Закрити</button></div>
+</div></div></div>
+
+<!-- Add user -->
+<div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-person-plus me-2" style="color:var(--accent)"></i>Новий користувач</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-2"><label class="form-label">Логін *</label><input id="auLogin" class="form-control" placeholder="ivan"></div>
+        <div class="mb-2"><label class="form-label">Ім'я (відображається)</label><input id="auName" class="form-control" placeholder="Іван Механік"></div>
+        <div class="mb-2"><label class="form-label">Роль</label>
+            <select id="auRole" class="form-select">
+                <option value="mechanic">Механік — тільки CRM</option>
+                <option value="cashier">Касир — тільки Магазин</option>
+                <option value="admin">Адміністратор — повний доступ</option>
+            </select>
+        </div>
+        <div><label class="form-label">Пароль *</label><input id="auPwd" type="password" class="form-control" placeholder="мін. 4 символи"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="addUser()">Створити</button></div>
+</div></div></div>
+
+<!-- Edit user -->
+<div class="modal fade" id="editUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-person-gear me-2" style="color:var(--warning)"></i>Редагувати</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-2"><label class="form-label">Ім'я</label><input id="euName" class="form-control"></div>
+        <div class="mb-2"><label class="form-label">Роль</label>
+            <select id="euRole" class="form-select">
+                <option value="mechanic">Механік</option>
+                <option value="cashier">Касир</option>
+                <option value="admin">Адміністратор</option>
+            </select>
+        </div>
+        <div><label class="form-label">Новий пароль <span style="color:var(--muted)">(залишити порожнім — не змінювати)</span></label><input id="euPwd" type="password" class="form-control" placeholder="новий пароль..."></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn" style="background:var(--warning);color:#000;" id="editUserSaveBtn">Зберегти</button></div>
+</div></div></div>
+
+<!-- Change password -->
+<div class="modal fade" id="changePwdModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-key me-2" style="color:var(--accent)"></i>Змінити пароль</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-2"><label class="form-label">Поточний пароль</label><input id="cpOld" type="password" class="form-control"></div>
+        <div><label class="form-label">Новий пароль</label><input id="cpNew" type="password" class="form-control"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="changePwd()">Зберегти</button></div>
+</div></div></div>
+
+<!-- Print area -->
+<div id="print-area">
+    <div style="max-width:400px;margin:0 auto;padding:20px;font-family:Arial,sans-serif;">
+        <div style="text-align:center;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:14px;">
+            <div style="font-size:20px;font-weight:700;">СТО «Герат» — Магазин</div>
+            <div style="color:#666;font-size:12px;margin-top:3px;">Касовий чек</div>
+            <div style="color:#999;font-size:11px;margin-top:3px;" id="printDate"></div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:14px;">
+            <thead><tr style="background:#f4f4f4;">
+                <th style="text-align:left;padding:6px 10px;border:1px solid #ddd;font-size:12px;">Товар</th>
+                <th style="text-align:center;padding:6px 10px;border:1px solid #ddd;font-size:12px;">Кіл.</th>
+                <th style="text-align:right;padding:6px 10px;border:1px solid #ddd;font-size:12px;">Сума</th>
+            </tr></thead>
+            <tbody id="printItems"></tbody>
+            <tfoot><tr style="font-weight:700;background:#f0f0f0;">
+                <td colspan="2" style="padding:8px 10px;border:1px solid #ddd;font-size:13px;">РАЗОМ</td>
+                <td style="text-align:right;padding:8px 10px;border:1px solid #ddd;font-size:13px;" id="printTotal"></td>
+            </tfoot>
+        </table>
+        <div style="text-align:center;color:#aaa;font-size:11px;">Дякуємо за покупку! • СТО «Герат»</div>
+    </div>
+</div>
+
+<div class="statusbar">
+    <span><i class="bi bi-shop me-1"></i>Магазин</span>
+    <span><span style="color:var(--border)">v</span><span class="statusbar-ver">{{ version }}</span></span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── STATE ────────────────────────────────────────────────────────────────────
+let allProducts  = {{ products | tojson }};
+let allCategories = {{ categories | tojson }};
+let allSales     = [];
+let allUsers     = [];
+let cart         = JSON.parse(localStorage.getItem('shopCart') || '[]');
+let activeCat    = 0;
+let prodQ        = '';
+let invQ         = '';
+let salesQ       = '';
+const IS_ADMIN   = {{ 'true' if user.role == 'admin' else 'false' }};
+
+// ── MODALS ───────────────────────────────────────────────────────────────────
+const _m = {};
+function openModal(id) { if (!_m[id]) _m[id] = new bootstrap.Modal(document.getElementById(id)); _m[id].show(); }
+function closeModal(id) { _m[id]?.hide(); }
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+    const icons = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', info:'bi-info-circle-fill' };
+    const colors = { success:'var(--success)', error:'var(--danger)', info:'var(--info)' };
+    const id = 't' + Date.now();
+    document.getElementById('toastBox').insertAdjacentHTML('beforeend',
+        `<div id="${id}" class="toast-item t-${type}">
+            <i class="bi ${icons[type]||icons.info}" style="color:${colors[type]};font-size:1rem;flex-shrink:0;"></i>
+            <span class="toast-msg">${msg}</span>
+            <i class="bi bi-x" style="cursor:pointer;color:var(--muted);" onclick="this.closest('.toast-item').remove()"></i>
+        </div>`);
+    setTimeout(() => document.getElementById(id)?.remove(), 3500);
+}
+
+// ── API ──────────────────────────────────────────────────────────────────────
+async function api(url, data) {
+    try {
+        const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+        const j = await r.json();
+        if (!j.success && j.error) toast(j.error, 'error');
+        return j;
+    } catch { toast("Помилка з'єднання", 'error'); return { success: false }; }
+}
+
+function fmt(p) { return Number(p).toLocaleString('uk-UA') + ' грн'; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(t) {
+    ['catalog','sales','inv'].forEach(id => {
+        document.getElementById(`tab-${id}`).classList.toggle('active', id === t);
+        document.getElementById(`pane-${id}`).classList.toggle('active', id === t);
+    });
+    if (t === 'sales') loadSales();
+    if (t === 'inv')   renderInv();
+}
+
+// ── CATEGORY PILLS ───────────────────────────────────────────────────────────
+function renderPills() {
+    const el = document.getElementById('catPills');
+    let html = `<span class="cat-pill ${activeCat===0?'active':''}" onclick="setCat(0)">Всі</span>`;
+    allCategories.forEach(c => {
+        html += `<span class="cat-pill ${activeCat===c.id?'active':''}" onclick="setCat(${c.id})">${esc(c.name)}</span>`;
+    });
+    el.innerHTML = html;
+}
+function setCat(id) { activeCat = id; renderPills(); renderCatalog(); }
+
+// ── CATALOG ──────────────────────────────────────────────────────────────────
+function filterCatalog() { prodQ = document.getElementById('prodSearch').value.toLowerCase(); renderCatalog(); }
+function renderCatalog() {
+    const el = document.getElementById('prodList');
+    let prods = allProducts;
+    if (activeCat) prods = prods.filter(p => p.category_id === activeCat);
+    if (prodQ) prods = prods.filter(p => (p.name+p.barcode+p.category_name).toLowerCase().includes(prodQ));
+    if (!prods.length) {
+        el.innerHTML = '<div class="empty"><i class="bi bi-search"></i><p>Нічого не знайдено</p></div>';
+        return;
+    }
+    el.innerHTML = prods.map(p => {
+        const stockBadge = p.quantity === 0
+            ? `<span class="stock-out"><i class="bi bi-x-circle me-1"></i>Немає</span>`
+            : p.quantity <= 3
+                ? `<span class="stock-low"><i class="bi bi-exclamation-triangle me-1"></i>${p.quantity} шт</span>`
+                : `<span class="stock-ok"><i class="bi bi-check-circle me-1"></i>${p.quantity} шт</span>`;
+        return `<div class="prod-row" onclick="addToCart(${p.id},'${esc(p.name)}',${p.sell_price})">
+            <div class="prod-info">
+                <div class="prod-name">${esc(p.name)}</div>
+                <div class="prod-meta">
+                    ${p.category_name ? `<span class="tag-cat">${esc(p.category_name)}</span>` : ''}
+                    ${stockBadge}
+                    ${p.barcode ? `<span class="tag-cat"><i class="bi bi-upc me-1"></i>${esc(p.barcode)}</span>` : ''}
+                </div>
+            </div>
+            <span class="prod-price">${fmt(p.sell_price)}</span>
+            <button class="add-btn" ${p.quantity===0?'disabled':''} onclick="event.stopPropagation();addToCart(${p.id},'${esc(p.name)}',${p.sell_price})">
+                <i class="bi bi-cart-plus"></i>
+            </button>
+        </div>`;
+    }).join('');
+}
+
+// ── CART ─────────────────────────────────────────────────────────────────────
+function addToCart(id, name, price) {
+    const existing = cart.find(i => i.id === id);
+    if (existing) { existing.qty++; }
+    else { cart.push({ id, n: name, p: price, qty: 1 }); }
+    saveCart(); renderCart();
+    toast(`«${name}»`, 'info');
+}
+function incQty(idx) { if (cart[idx]) { cart[idx].qty++; saveCart(); renderCart(); } }
+function decQty(idx) { if (cart[idx]) { cart[idx].qty--; if (cart[idx].qty <= 0) cart.splice(idx, 1); saveCart(); renderCart(); } }
+function removeFromCart(idx) { cart.splice(idx, 1); saveCart(); renderCart(); }
+function clearCart() { cart = []; saveCart(); renderCart(); toast('Кошик очищено', 'info'); }
+function saveCart() { localStorage.setItem('shopCart', JSON.stringify(cart)); }
+function renderCart() {
+    const el = document.getElementById('cartList');
+    const total = cart.reduce((s, i) => s + i.p * i.qty, 0);
+    el.innerHTML = cart.length
+        ? cart.map((item, idx) => `
+            <div class="cart-item">
+                <span class="cart-item-name" title="${esc(item.n)}">${esc(item.n)}</span>
+                <div class="qty-ctrl-sm">
+                    <span class="qb" onclick="decQty(${idx})">−</span>
+                    <span class="qv">${item.qty}</span>
+                    <span class="qb" onclick="incQty(${idx})">+</span>
+                </div>
+                <span class="cart-item-price">${fmt(item.p * item.qty)}</span>
+                <i class="bi bi-x-lg cart-item-rm" onclick="removeFromCart(${idx})"></i>
+            </div>`).join('')
+        : '<div class="empty"><i class="bi bi-cart-x"></i><p>Кошик порожній</p></div>';
+    document.getElementById('cartTotal').textContent = fmt(total);
+    const has = cart.length > 0;
+    ['printBtn','clearBtn','saveBtn'].forEach(id => document.getElementById(id).disabled = !has);
+}
+
+// ── SAVE SALE ────────────────────────────────────────────────────────────────
+async function saveSale() {
+    const total = cart.reduce((s, i) => s + i.p * i.qty, 0);
+    const res = await api('/api/shop/save_sale', {
+        client_name: document.getElementById('saleClient').value,
+        notes: document.getElementById('saleNotes').value,
+        total,
+        items: JSON.stringify(cart)
+    });
+    if (res.success) {
+        // update local stock counts
+        cart.forEach(item => {
+            const p = allProducts.find(x => x.id === item.id);
+            if (p) p.quantity = Math.max(0, p.quantity - item.qty);
+        });
+        closeModal('saveSaleModal');
+        document.getElementById('saleClient').value = '';
+        document.getElementById('saleNotes').value = '';
+        clearCart();
+        renderCatalog(); renderInv();
+        toast('Продаж оформлено!');
+    }
+}
+
+// ── SALES HISTORY ────────────────────────────────────────────────────────────
+async function loadSales() {
+    document.getElementById('salesList').innerHTML = '<div class="empty"><i class="bi bi-hourglass-split"></i><p>Завантаження...</p></div>';
+    try {
+        allSales = await (await fetch('/api/shop/sales')).json();
+        renderSales(allSales);
+    } catch { document.getElementById('salesList').innerHTML = '<div class="empty"><i class="bi bi-exclamation-triangle"></i><p>Помилка</p></div>'; }
+}
+function filterSales() { salesQ = document.getElementById('saleSearch').value.toLowerCase(); renderSales(allSales.filter(s => ((s.client_name||'')+(s.cashier_name||'')+(s.notes||'')).toLowerCase().includes(salesQ))); }
+function renderSales(list) {
+    const el = document.getElementById('salesList');
+    if (!list.length) { el.innerHTML = '<div class="empty"><i class="bi bi-receipt"></i><p>Продажів немає</p></div>'; return; }
+    el.innerHTML = list.map(s => {
+        const items = JSON.parse(s.items || '[]');
+        return `<div class="list-row" ondblclick="showSaleDetail(${s.id})" title="Подвійний клік — деталі">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div>
+                    <div class="list-name">${s.client_name ? esc(s.client_name) : '<span style="color:var(--muted)">Без клієнта</span>'}</div>
+                    <div class="list-sub"><i class="bi bi-person me-1"></i>${esc(s.cashier_name)} · ${s.created_at}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="color:var(--success);font-weight:700;font-size:.9rem;">${fmt(s.total)}</span>
+                    ${IS_ADMIN ? `<button class="btn-icon" onclick="event.stopPropagation();delSale(${s.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>` : ''}
+                </div>
+            </div>
+            ${items.length ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">${items.slice(0,4).map(i=>`<span style="background:var(--bg-hover);color:var(--muted);font-size:.7rem;padding:2px 7px;border-radius:9px;">${esc(i.n)}×${i.qty}</span>`).join('')}${items.length>4?`<span style="background:var(--bg-hover);color:var(--muted);font-size:.7rem;padding:2px 7px;border-radius:9px;">+${items.length-4}</span>`:''}</div>` : ''}
+        </div>`;
+    }).join('');
+}
+function showSaleDetail(id) {
+    const s = allSales.find(x => x.id === id);
+    if (!s) return;
+    const items = JSON.parse(s.items || '[]');
+    document.getElementById('saleDetailBody').innerHTML = `
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                <div>
+                    <div style="font-size:1.05rem;font-weight:700;">${s.client_name ? esc(s.client_name) : 'Без клієнта'}</div>
+                    <div style="color:var(--muted);font-size:.8rem;"><i class="bi bi-person me-1"></i>Касир: ${esc(s.cashier_name)} · ${s.created_at}</div>
+                </div>
+                <div style="color:var(--success);font-size:1.2rem;font-weight:700;">${fmt(s.total)}</div>
+            </div>
+            ${s.notes ? `<div style="background:var(--bg-item);border-radius:6px;padding:8px 12px;font-size:.83rem;color:var(--muted);">${esc(s.notes)}</div>` : ''}
+        </div>
+        <div>
+            ${items.map(i => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px;border-bottom:1px solid var(--border);">
+                    <span style="font-size:.87rem;">${esc(i.n)}</span>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span style="color:var(--muted);font-size:.8rem;">×${i.qty}</span>
+                        <span style="color:var(--success);font-weight:600;font-size:.87rem;">${fmt(i.p * i.qty)}</span>
+                    </div>
+                </div>`).join('')}
+        </div>`;
+    openModal('saleDetailModal');
+}
+async function delSale(id) {
+    if (!confirm('Видалити продаж?')) return;
+    const res = await api('/api/shop/delete_sale', { id });
+    if (res.success) { toast('Продаж видалено'); loadSales(); }
+}
+
+// ── INVENTORY ────────────────────────────────────────────────────────────────
+function filterInv() { invQ = document.getElementById('invSearch').value.toLowerCase(); renderInv(); }
+function renderInv() {
+    const tb = document.getElementById('invTable');
+    let prods = allProducts;
+    if (invQ) prods = prods.filter(p => (p.name+p.category_name+p.barcode).toLowerCase().includes(invQ));
+    if (!prods.length) {
+        tb.innerHTML = '<tr><td colspan="5"><div class="empty"><i class="bi bi-boxes"></i><p>Товарів немає</p></div></td></tr>';
+        return;
+    }
+    tb.innerHTML = prods.map(p => {
+        const stockClass = p.quantity === 0 ? 'stock-out' : p.quantity <= 3 ? 'stock-low' : 'stock-ok';
+        return `<tr>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(p.name)}">${esc(p.name)}</td>
+            <td><span style="background:var(--bg-hover);color:var(--muted);font-size:.72rem;padding:2px 7px;border-radius:9px;">${p.category_name ? esc(p.category_name) : '—'}</span></td>
+            <td style="text-align:right;color:var(--accent);font-weight:600;">${fmt(p.sell_price)}</td>
+            <td style="text-align:center;">
+                <div class="qty-ctrl" style="justify-content:center;">
+                    <span class="qty-btn" onclick="adjustStock(${p.id},-1)">−</span>
+                    <span class="qty-val ${stockClass}" style="background:none;padding:2px 6px;">${p.quantity}</span>
+                    <span class="qty-btn" onclick="adjustStock(${p.id},1)">+</span>
+                </div>
+            </td>
+            <td style="text-align:right;white-space:nowrap;">
+                <button class="btn-icon" onclick="editProduct(${p.id})" title="Редагувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
+                ${IS_ADMIN ? `<button class="btn-icon" onclick="deleteProduct(${p.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>` : ''}
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function adjustStock(id, delta) {
+    const res = await api('/api/shop/adjust_stock', { id, delta });
+    if (res.success) {
+        const p = allProducts.find(x => x.id === id);
+        if (p) p.quantity = res.quantity;
+        renderInv(); renderCatalog();
+    }
+}
+
+// ── PRODUCT CRUD ─────────────────────────────────────────────────────────────
+function populateCatSelects() {
+    const opts = '<option value="">— без категорії —</option>' +
+        allCategories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    document.getElementById('apCat').innerHTML = opts;
+    document.getElementById('epCat').innerHTML = opts;
+}
+async function addProduct() {
+    const res = await api('/api/shop/add_product', {
+        name: document.getElementById('apName').value,
+        category_id: parseInt(document.getElementById('apCat').value) || null,
+        sell_price: document.getElementById('apSell').value,
+        buy_price: document.getElementById('apBuy').value,
+        quantity: document.getElementById('apQty').value,
+        barcode: document.getElementById('apBarcode').value,
+    });
+    if (res.success) {
+        allProducts.push(res.product); allProducts.sort((a,b)=>a.name.localeCompare(b.name));
+        ['apName','apBarcode'].forEach(i => document.getElementById(i).value = '');
+        ['apSell','apBuy','apQty'].forEach(i => document.getElementById(i).value = '');
+        document.getElementById('apCat').value = '';
+        closeModal('addProdModal'); renderCatalog(); renderInv();
+        toast(`«${res.product.name}» додано`);
+    }
+}
+function editProduct(id) {
+    const p = allProducts.find(x => x.id === id);
+    if (!p) return;
+    populateCatSelects();
+    document.getElementById('epName').value = p.name;
+    document.getElementById('epSell').value = p.sell_price;
+    document.getElementById('epBuy').value = p.buy_price;
+    document.getElementById('epQty').value = p.quantity;
+    document.getElementById('epBarcode').value = p.barcode;
+    document.getElementById('epCat').value = p.category_id || '';
+    openModal('editProdModal');
+    document.getElementById('editProdSaveBtn').onclick = async () => {
+        const res = await api('/api/shop/edit_product', {
+            id,
+            name: document.getElementById('epName').value,
+            category_id: parseInt(document.getElementById('epCat').value) || null,
+            sell_price: document.getElementById('epSell').value,
+            buy_price: document.getElementById('epBuy').value,
+            quantity: document.getElementById('epQty').value,
+            barcode: document.getElementById('epBarcode').value,
+        });
+        if (res.success) {
+            const idx = allProducts.findIndex(x => x.id === id);
+            if (idx >= 0) allProducts[idx] = res.product;
+            closeModal('editProdModal'); renderCatalog(); renderInv();
+            toast('Товар оновлено');
+        }
+    };
+}
+async function deleteProduct(id) {
+    const p = allProducts.find(x => x.id === id);
+    if (!confirm(`Видалити «${p?.name}»?`)) return;
+    const res = await api('/api/shop/delete_product', { id });
+    if (res.success) {
+        allProducts = allProducts.filter(x => x.id !== id);
+        renderCatalog(); renderInv(); toast('Товар видалено');
+    }
+}
+
+// ── CATEGORY CRUD ─────────────────────────────────────────────────────────────
+async function addCategory() {
+    const name = document.getElementById('catName').value.trim();
+    if (!name) { toast('Введіть назву', 'error'); return; }
+    const res = await api('/api/shop/add_category', { name });
+    if (res.success) {
+        allCategories.push({ id: res.id, name: res.name });
+        allCategories.sort((a,b)=>a.name.localeCompare(b.name));
+        document.getElementById('catName').value = '';
+        closeModal('addCatModal'); renderPills(); populateCatSelects();
+        toast(`Категорія «${name}» додана`);
+    }
+}
+
+// ── USERS (ADMIN) ────────────────────────────────────────────────────────────
+async function loadUsers() {
+    try {
+        allUsers = await (await fetch('/api/users')).json();
+        renderUsers();
+    } catch {}
+}
+function renderUsers() {
+    const ROLE_LABELS = { admin:'Адмін', mechanic:'Механік', cashier:'Касир' };
+    const ROLE_CLS    = { admin:'role-admin', mechanic:'role-mechanic', cashier:'role-cashier' };
+    document.getElementById('usersList').innerHTML = allUsers.length
+        ? `<table style="width:100%;border-collapse:collapse;">
+            ${allUsers.map(u => `
+                <tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:10px 8px;">
+                        <div style="font-weight:600;font-size:.87rem;">${esc(u.display_name || u.username)}</div>
+                        <div style="color:var(--muted);font-size:.76rem;">@${esc(u.username)}</div>
+                    </td>
+                    <td style="padding:10px 8px;">
+                        <span class="role-badge ${ROLE_CLS[u.role]||''}">${ROLE_LABELS[u.role]||u.role}</span>
+                    </td>
+                    <td style="padding:10px 8px;text-align:right;white-space:nowrap;">
+                        <button class="btn-icon" onclick="openEditUser(${u.id})" title="Редагувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
+                        <button class="btn-icon" onclick="deleteUser(${u.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>
+                    </td>
+                </tr>`).join('')}
+          </table>`
+        : '<div class="empty"><i class="bi bi-people"></i><p>Немає користувачів</p></div>';
+}
+async function addUser() {
+    const res = await api('/api/add_user', {
+        username: document.getElementById('auLogin').value,
+        display_name: document.getElementById('auName').value,
+        role: document.getElementById('auRole').value,
+        password: document.getElementById('auPwd').value,
+    });
+    if (res.success) {
+        ['auLogin','auName','auPwd'].forEach(i => document.getElementById(i).value = '');
+        closeModal('addUserModal');
+        await loadUsers(); toast('Користувача створено');
+    }
+}
+function openEditUser(id) {
+    const u = allUsers.find(x => x.id === id);
+    if (!u) return;
+    document.getElementById('euName').value = u.display_name;
+    document.getElementById('euRole').value = u.role;
+    document.getElementById('euPwd').value = '';
+    openModal('editUserModal');
+    document.getElementById('editUserSaveBtn').onclick = async () => {
+        const res = await api('/api/edit_user', {
+            id,
+            display_name: document.getElementById('euName').value,
+            role: document.getElementById('euRole').value,
+            password: document.getElementById('euPwd').value || undefined,
+        });
+        if (res.success) { closeModal('editUserModal'); await loadUsers(); toast('Оновлено'); }
+    };
+}
+async function deleteUser(id) {
+    const u = allUsers.find(x => x.id === id);
+    if (!confirm(`Видалити «${u?.username}»?`)) return;
+    const res = await api('/api/delete_user', { id });
+    if (res.success) { await loadUsers(); toast('Видалено'); }
+}
+async function changePwd() {
+    const res = await api('/api/change_password', {
+        old_password: document.getElementById('cpOld').value,
+        new_password: document.getElementById('cpNew').value,
+    });
+    if (res.success) {
+        ['cpOld','cpNew'].forEach(i => document.getElementById(i).value = '');
+        closeModal('changePwdModal'); toast('Пароль змінено');
+    }
+}
+
+// ── PRINT ────────────────────────────────────────────────────────────────────
+function printReceipt() {
+    document.getElementById('printDate').textContent = new Date().toLocaleString('uk-UA');
+    document.getElementById('printItems').innerHTML = cart.map(i =>
+        `<tr><td style="padding:6px 10px;border:1px solid #ddd;font-size:12px;">${esc(i.n)}</td>
+             <td style="text-align:center;padding:6px 10px;border:1px solid #ddd;font-size:12px;">${i.qty}</td>
+             <td style="text-align:right;padding:6px 10px;border:1px solid #ddd;font-size:12px;">${fmt(i.p * i.qty)}</td></tr>`
+    ).join('');
+    document.getElementById('printTotal').textContent = fmt(cart.reduce((s,i) => s + i.p * i.qty, 0));
+    window.print();
+}
+
+// ── ENTER KEY ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const modal = document.querySelector('.modal.show');
+    if (!modal) return;
+    const btn = modal.querySelector('.modal-footer .btn-ok, .modal-footer .btn-accent');
+    if (btn) btn.click();
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.onload = () => {
+    renderPills();
+    renderCatalog();
+    renderCart();
+    populateCatSelects();
+    document.getElementById('usersModal').addEventListener('show.bs.modal', loadUsers);
+};
+</script>
+</body>
+</html>

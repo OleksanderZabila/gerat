@@ -162,6 +162,18 @@
         .stat-val { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
         .stat-lbl { font-size: .75rem; color: var(--muted); margin-top: 2px; }
 
+        /* Topbar user / mode */
+        .mode-switcher { display:flex; gap:3px; background:var(--bg-item); border:1px solid var(--border); border-radius:7px; padding:3px; }
+        .mode-btn { padding:4px 12px; border-radius:5px; border:none; background:none; color:var(--muted); font-size:.8rem; cursor:pointer; text-decoration:none; display:flex; align-items:center; gap:5px; transition:background .12s,color .12s; }
+        .mode-btn:hover { color:var(--text); }
+        .mode-btn.active { background:var(--accent); color:#fff; }
+        .topbar-right { display:flex; align-items:center; gap:8px; margin-left:auto; }
+        .topbar-user { display:flex; align-items:center; gap:7px; font-size:.83rem; }
+        .role-badge { font-size:.7rem; padding:2px 8px; border-radius:9px; font-weight:600; }
+        .role-admin { background:rgba(249,115,22,.18); color:var(--accent); }
+        .role-mechanic { background:rgba(59,130,246,.18); color:var(--info); }
+        .role-cashier { background:rgba(34,197,94,.18); color:var(--success); }
+
         /* Status bar */
         .statusbar {
             position: fixed;
@@ -197,8 +209,25 @@
 <div class="toast-box" id="toastBox"></div>
 
 <div class="topbar">
-    <a class="topbar-logo" href="#"><i class="bi bi-tools"></i> СТО «Герат»</a>
-    <span class="topbar-sub">Система управління послугами</span>
+    <a class="topbar-logo" href="/"><i class="bi bi-tools"></i> СТО «Герат»</a>
+    {% if user.role == 'admin' %}
+    <div class="mode-switcher">
+        <a href="/" class="mode-btn active"><i class="bi bi-car-front"></i> CRM</a>
+        <a href="/shop" class="mode-btn"><i class="bi bi-shop"></i> Магазин</a>
+    </div>
+    {% endif %}
+    <div class="topbar-right">
+        <div class="topbar-user">
+            <i class="bi bi-person-circle" style="color:var(--muted);font-size:1.1rem;"></i>
+            <span>{{ user.display_name or user.username }}</span>
+            <span class="role-badge role-{{ user.role }}">{{ {'admin':'Адмін','mechanic':'Механік','cashier':'Касир'}[user.role] }}</span>
+        </div>
+        {% if user.role == 'admin' %}
+        <button class="btn-icon" onclick="openModal('usersModal')" title="Користувачі"><i class="bi bi-people" style="color:var(--accent)"></i></button>
+        {% endif %}
+        <button class="btn-icon" onclick="openModal('changePwdModal')" title="Змінити пароль"><i class="bi bi-key" style="color:var(--muted)"></i></button>
+        <a href="/logout" class="btn-icon" title="Вийти"><i class="bi bi-box-arrow-right" style="color:var(--danger)"></i></a>
+    </div>
 </div>
 
 <div class="main-grid">
@@ -424,6 +453,64 @@
     <div class="modal-header"><h5 class="modal-title" id="clientDetailTitle"><i class="bi bi-person-circle me-2" style="color:var(--accent)"></i>Профіль клієнта</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body p-0" id="clientDetailBody"></div>
     <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Закрити</button></div>
+</div></div></div>
+
+<!-- Users modal (admin) -->
+<div class="modal fade" id="usersModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-people me-2" style="color:var(--accent)"></i>Користувачі</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="sec-title" style="margin:0">Список</span>
+            <button class="btn btn-accent btn-sm" onclick="openModal('addUserModal')"><i class="bi bi-person-plus me-1"></i>Додати</button>
+        </div>
+        <div id="usersList"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Закрити</button></div>
+</div></div></div>
+
+<!-- Add user -->
+<div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-person-plus me-2" style="color:var(--accent)"></i>Новий користувач</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-2"><label class="form-label">Логін *</label><input id="auLogin" class="form-control" placeholder="ivan"></div>
+        <div class="mb-2"><label class="form-label">Ім'я</label><input id="auName" class="form-control" placeholder="Іван Механік"></div>
+        <div class="mb-2"><label class="form-label">Роль</label>
+            <select id="auRole" class="form-select">
+                <option value="mechanic">Механік — тільки CRM</option>
+                <option value="cashier">Касир — тільки Магазин</option>
+                <option value="admin">Адміністратор — повний доступ</option>
+            </select>
+        </div>
+        <div><label class="form-label">Пароль *</label><input id="auPwd" type="password" class="form-control" placeholder="мін. 4 символи"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="addUser()">Створити</button></div>
+</div></div></div>
+
+<!-- Edit user -->
+<div class="modal fade" id="editUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-person-gear me-2" style="color:var(--warning)"></i>Редагувати</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-2"><label class="form-label">Ім'я</label><input id="euName" class="form-control"></div>
+        <div class="mb-2"><label class="form-label">Роль</label>
+            <select id="euRole" class="form-select">
+                <option value="mechanic">Механік</option>
+                <option value="cashier">Касир</option>
+                <option value="admin">Адміністратор</option>
+            </select>
+        </div>
+        <div><label class="form-label">Новий пароль <span style="color:var(--muted)">(порожньо — не змінювати)</span></label><input id="euPwd" type="password" class="form-control" placeholder="новий пароль..."></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn" style="background:var(--warning);color:#000;" id="editUserSaveBtn">Зберегти</button></div>
+</div></div></div>
+
+<!-- Change password -->
+<div class="modal fade" id="changePwdModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-key me-2" style="color:var(--accent)"></i>Змінити пароль</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-2"><label class="form-label">Поточний пароль</label><input id="cpOld" type="password" class="form-control"></div>
+        <div><label class="form-label">Новий пароль</label><input id="cpNew" type="password" class="form-control"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="changePwd()">Зберегти</button></div>
 </div></div></div>
 
 <!-- Print area -->
@@ -1028,8 +1115,81 @@ document.addEventListener('keydown', e => {
     if (btn) btn.click();
 });
 
+// ── USERS (ADMIN) ──────────────────────────────────────────────────────────
+let allUsers = [];
+async function loadUsers() {
+    try { allUsers = await (await fetch('/api/users')).json(); renderUsers(); } catch {}
+}
+function renderUsers() {
+    const RL = { admin:'Адмін', mechanic:'Механік', cashier:'Касир' };
+    const RC = { admin:'role-admin', mechanic:'role-mechanic', cashier:'role-cashier' };
+    document.getElementById('usersList').innerHTML = allUsers.length
+        ? `<table style="width:100%;border-collapse:collapse;">${allUsers.map(u => `
+            <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:10px 8px;">
+                    <div style="font-weight:600;font-size:.87rem;">${escHtml(u.display_name||u.username)}</div>
+                    <div style="color:var(--muted);font-size:.76rem;">@${escHtml(u.username)}</div>
+                </td>
+                <td style="padding:10px 8px;"><span class="role-badge ${RC[u.role]||''}">${RL[u.role]||u.role}</span></td>
+                <td style="padding:10px 8px;text-align:right;white-space:nowrap;">
+                    <button class="btn-icon" onclick="openEditUser(${u.id})"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
+                    <button class="btn-icon" onclick="deleteUser(${u.id})"><i class="bi bi-trash" style="color:var(--danger)"></i></button>
+                </td>
+            </tr>`).join('')}</table>`
+        : '<div class="empty"><i class="bi bi-people"></i><p>Немає користувачів</p></div>';
+}
+async function addUser() {
+    const res = await api('/api/add_user', {
+        username: document.getElementById('auLogin').value,
+        display_name: document.getElementById('auName').value,
+        role: document.getElementById('auRole').value,
+        password: document.getElementById('auPwd').value,
+    });
+    if (res.success) {
+        ['auLogin','auName','auPwd'].forEach(i => document.getElementById(i).value = '');
+        closeModal('addUserModal'); await loadUsers(); toast('Користувача створено');
+    }
+}
+function openEditUser(id) {
+    const u = allUsers.find(x => x.id === id);
+    if (!u) return;
+    document.getElementById('euName').value = u.display_name;
+    document.getElementById('euRole').value = u.role;
+    document.getElementById('euPwd').value = '';
+    openModal('editUserModal');
+    document.getElementById('editUserSaveBtn').onclick = async () => {
+        const res = await api('/api/edit_user', {
+            id,
+            display_name: document.getElementById('euName').value,
+            role: document.getElementById('euRole').value,
+            password: document.getElementById('euPwd').value || undefined,
+        });
+        if (res.success) { closeModal('editUserModal'); await loadUsers(); toast('Оновлено'); }
+    };
+}
+async function deleteUser(id) {
+    const u = allUsers.find(x => x.id === id);
+    if (!confirm(`Видалити «${u?.username}»?`)) return;
+    const res = await api('/api/delete_user', { id });
+    if (res.success) { await loadUsers(); toast('Видалено'); }
+}
+async function changePwd() {
+    const res = await api('/api/change_password', {
+        old_password: document.getElementById('cpOld').value,
+        new_password: document.getElementById('cpNew').value,
+    });
+    if (res.success) {
+        ['cpOld','cpNew'].forEach(i => document.getElementById(i).value = '');
+        closeModal('changePwdModal'); toast('Пароль змінено');
+    }
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────
-window.onload = () => { renderBrands(); renderGen(); renderCart(); };
+window.onload = () => {
+    renderBrands(); renderGen(); renderCart();
+    const um = document.getElementById('usersModal');
+    if (um) um.addEventListener('show.bs.modal', loadUsers);
+};
 </script>
 </body>
 </html>

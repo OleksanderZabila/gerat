@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вхід — СТО «Герат»</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-base: #0d1117; --bg-card: #161b22; --bg-item: #1c2128;
+            --accent: #f97316; --accent-dim: rgba(249,115,22,.12);
+            --success: #22c55e; --danger: #ef4444;
+            --text: #e6edf3; --muted: #8b949e; --border: #30363d;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            background: var(--bg-base); color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px; min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-wrap { width: 100%; max-width: 380px; padding: 16px; }
+        .login-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .login-head {
+            background: var(--bg-item); border-bottom: 1px solid var(--border);
+            padding: 32px 28px 24px; text-align: center;
+        }
+        .login-logo { font-size: 2.6rem; color: var(--accent); line-height: 1; }
+        .login-title { font-size: 1.25rem; font-weight: 700; margin-top: 10px; }
+        .login-sub { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+        .login-body { padding: 28px; }
+        .login-foot { padding: 12px 28px; background: var(--bg-item); border-top: 1px solid var(--border); text-align: center; }
+        .form-label { color: var(--muted); font-size: .77rem; margin-bottom: 4px; display: block; }
+        .form-control {
+            background: var(--bg-item) !important; border: 1px solid var(--border) !important;
+            color: var(--text) !important; border-radius: 7px; font-size: .875rem;
+            padding: 9px 12px; width: 100%;
+        }
+        .form-control:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent-dim) !important; outline: none; }
+        .form-control::placeholder { color: var(--muted) !important; }
+        .btn-login {
+            width: 100%; padding: 10px; border-radius: 7px; border: none;
+            background: var(--accent); color: #fff; font-weight: 600; font-size: .9rem;
+            cursor: pointer; transition: background .15s; margin-top: 4px;
+        }
+        .btn-login:hover { background: #ea6c0a; }
+        .alert-err {
+            background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+            color: #fca5a5; border-radius: 7px; padding: 9px 12px;
+            font-size: .82rem; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+        }
+        .ver { color: var(--muted); font-size: .72rem; }
+        .role-hint { background: var(--bg-base); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-top: 18px; font-size: .78rem; color: var(--muted); }
+        .role-hint span { color: var(--accent); font-weight: 600; }
+    </style>
+</head>
+<body>
+<div class="login-wrap">
+    <div class="login-card">
+        <div class="login-head">
+            <div class="login-logo"><i class="bi bi-tools"></i></div>
+            <div class="login-title">СТО «Герат»</div>
+            <div class="login-sub">Система управління послугами</div>
+        </div>
+        <div class="login-body">
+            {% if error %}
+            <div class="alert-err"><i class="bi bi-exclamation-circle-fill"></i>{{ error }}</div>
+            {% endif %}
+            <form method="POST" autocomplete="on">
+                <div class="mb-3">
+                    <label class="form-label">Логін</label>
+                    <input name="username" class="form-control" placeholder="admin" autofocus autocomplete="username">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Пароль</label>
+                    <div style="position:relative;">
+                        <input name="password" id="pwdInput" type="password" class="form-control" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px;">
+                        <i class="bi bi-eye" id="pwdToggle" onclick="togglePwd()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:.95rem;"></i>
+                    </div>
+                </div>
+                <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right me-2"></i>Увійти</button>
+            </form>
+            <div class="role-hint">
+                <div style="margin-bottom:5px;font-weight:600;color:var(--text);">Ролі в системі:</div>
+                <div><span>Адмін</span> — повний доступ (CRM + Магазин)</div>
+                <div><span>Механік</span> — тільки CRM</div>
+                <div><span>Касир</span> — тільки Магазин</div>
+            </div>
+        </div>
+        <div class="login-foot">
+            <span class="ver">v{{ version }} · СТО «Герат»</span>
+        </div>
+    </div>
+</div>
+<script>
+function togglePwd() {
+    const i = document.getElementById('pwdInput');
+    const t = document.getElementById('pwdToggle');
+    if (i.type === 'password') { i.type = 'text'; t.className = 'bi bi-eye-slash'; }
+    else { i.type = 'password'; t.className = 'bi bi-eye'; }
+}
+document.querySelector('form').addEventListener('keydown', e => {
+    if (e.key === 'Enter') e.currentTarget.submit();
+});
+</script>
+</body>
+</html>
