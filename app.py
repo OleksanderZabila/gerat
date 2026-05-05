@@ -4,6 +4,8 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
+APP_VERSION = '2.1.0'
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -78,7 +80,7 @@ def index():
             ]
     gs = GeneralService.query.all()
     gs_list = [{"id": s.id, "posluga": s.name, "cina": s.price} for s in gs]
-    return render_template('index.html', db_dict=db_dict, general_services=gs_list)
+    return render_template('index.html', db_dict=db_dict, general_services=gs_list, version=APP_VERSION)
 
 
 @app.route('/api/get_data')
