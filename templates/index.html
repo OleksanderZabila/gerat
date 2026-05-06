@@ -8,32 +8,51 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --bg-base:    #0d1117;
-            --bg-card:    #161b22;
-            --bg-item:    #1c2128;
-            --bg-hover:   #262c36;
+            --bg-base:    #070d16;
+            --bg-card:    #0c1520;
+            --bg-item:    #111e2e;
+            --bg-hover:   #182438;
             --accent:     #f97316;
-            --accent-dim: rgba(249,115,22,.12);
+            --accent-dim: rgba(249,115,22,.14);
             --success:    #22c55e;
             --danger:     #ef4444;
             --warning:    #f59e0b;
             --info:       #3b82f6;
-            --text:       #e6edf3;
-            --muted:      #8b949e;
-            --border:     #30363d;
+            --text:       #dde8f5;
+            --muted:      #7c8fa8;
+            --border:     #1c2e44;
         }
         *, *::before, *::after { box-sizing: border-box; }
         html, body { height: 100%; margin: 0; }
-        body { background: var(--bg-base); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; }
+        body {
+            background: var(--bg-base);
+            background-image: radial-gradient(ellipse at 80% 20%, rgba(249,115,22,.04) 0%, transparent 50%),
+                              radial-gradient(ellipse at 5%  85%, rgba(96,165,250,.03) 0%, transparent 45%);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+        }
 
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-        .topbar { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 12px; }
+        .topbar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 9px 20px;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 1px 12px rgba(0,0,0,.35);
+        }
         .topbar-logo { color: var(--accent); font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; text-decoration: none; }
-        .topbar-logo i { font-size: 1.3rem; }
+        .topbar-logo i { font-size: 1.3rem; filter: drop-shadow(0 0 6px rgba(249,115,22,.4)); }
         .topbar-sub { color: var(--muted); font-size: .78rem; border-left: 1px solid var(--border); padding-left: 12px; }
+
+        /* Stats strip */
+        .topbar-stats { display:flex; align-items:center; gap:4px; border-left:1px solid var(--border); padding-left:12px; }
+        .tstat { display:flex; align-items:center; gap:5px; padding:3px 9px; border-radius:6px; background:var(--bg-item); border:1px solid var(--border); font-size:.76rem; color:var(--muted); white-space:nowrap; }
+        .tstat i { font-size:.82rem; }
+        .tstat strong { color:var(--text); font-weight:700; }
 
         .main-grid { display: grid; grid-template-columns: 1fr 310px; gap: 14px; padding: 14px 20px; }
         @media (max-width: 991px) { .main-grid { grid-template-columns: 1fr; } }
@@ -89,8 +108,8 @@
         .brand-count { font-size: .7rem; color: var(--muted); background: var(--bg-hover); padding: 1px 7px; border-radius: 9px; margin-right: 6px; }
         .action-btn { opacity: 0; transition: opacity .15s; font-size: .8rem; }
         .brand-row:hover .action-btn, .model-row:hover .action-btn, .list-row:hover .action-btn { opacity: 1; }
-        .model-list { border-top: 1px solid rgba(48,54,61,.4); }
-        .model-row { display: flex; align-items: center; padding: 7px 12px 7px 28px; border-bottom: 1px solid rgba(48,54,61,.4); cursor: pointer; transition: background .12s; font-size: .85rem; }
+        .model-list { border-top: 1px solid rgba(28,46,68,.6); }
+        .model-row { display: flex; align-items: center; padding: 7px 12px 7px 28px; border-bottom: 1px solid rgba(28,46,68,.6); cursor: pointer; transition: background .12s; font-size: .85rem; }
         .model-row:hover { background: var(--bg-hover); }
         .model-row.active { background: var(--accent-dim); border-left: 3px solid var(--accent); padding-left: 25px; }
         .model-row.active .model-label { color: var(--accent); font-weight: 600; }
@@ -216,6 +235,11 @@
         <a href="/shop" class="mode-btn"><i class="bi bi-shop"></i> Магазин</a>
     </div>
     {% endif %}
+    <div class="topbar-stats" id="topbarStats">
+        <div class="tstat" title="Замовлення сьогодні"><i class="bi bi-clock-history" style="color:var(--accent)"></i> <strong id="statOrd">—</strong> замовл.</div>
+        <div class="tstat" title="Виручка CRM сьогодні"><i class="bi bi-cash-coin" style="color:var(--success)"></i> <strong id="statRev">—</strong> грн</div>
+        <div class="tstat" title="Клієнтів загалом"><i class="bi bi-people" style="color:var(--info)"></i> <strong id="statCl">—</strong></div>
+    </div>
     <div class="topbar-right">
         <div class="topbar-user">
             <i class="bi bi-person-circle" style="color:var(--muted);font-size:1.1rem;"></i>
@@ -264,8 +288,8 @@
                         <table class="srv-table"><tbody id="servicesTable"></tbody></table>
                     </div>
                 </div>
-                <div id="noCar" class="empty" style="margin-top:40px;">
-                    <i class="bi bi-car-front-fill"></i>
+                <div id="noCar" class="empty" style="margin-top:30px;">
+                    <img src="/static/img/car-side.svg" style="width:110px;opacity:.18;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;" alt="">
                     <p>Оберіть модель авто<br>щоб побачити послуги</p>
                 </div>
             </div>
@@ -537,7 +561,8 @@
 </div>
 
 <div class="statusbar">
-    <span>СТО «Герат»<span class="statusbar-dot">·</span>Система управління послугами</span>
+    <span>СТО «Герат»<span class="statusbar-dot"> · </span>CRM-система</span>
+    <span id="sbTime" style="color:var(--muted);"></span>
     <span><span class="statusbar-dot">v</span><span class="statusbar-ver">{{ version }}</span></span>
 </div>
 
@@ -1184,11 +1209,31 @@ async function changePwd() {
     }
 }
 
+// ── STATS ──────────────────────────────────────────────────────────────────
+async function loadStats() {
+    try {
+        const s = await (await fetch('/api/stats')).json();
+        document.getElementById('statOrd').textContent = s.crm_orders;
+        document.getElementById('statRev').textContent = Number(s.crm_revenue).toLocaleString('uk-UA');
+        document.getElementById('statCl').textContent  = s.total_clients;
+    } catch {}
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────
 window.onload = () => {
     renderBrands(); renderGen(); renderCart();
     const um = document.getElementById('usersModal');
     if (um) um.addEventListener('show.bs.modal', loadUsers);
+    loadStats();
+    setInterval(loadStats, 60000);
+    // Live clock in statusbar
+    function updateClock() {
+        const now = new Date();
+        const sb = document.getElementById('sbTime');
+        if (sb) sb.textContent = now.toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'})
+            + ' ' + now.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+    }
+    updateClock(); setInterval(updateClock, 10000);
 };
 </script>
 </body>

@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
-APP_VERSION = '2.3.0'
+APP_VERSION = '2.4.0'
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gerat.db'
@@ -459,6 +459,31 @@ def shop_del_sale():
     db.session.delete(s)
     db.session.commit()
     return _ok()
+
+
+# ── Stats ─────────────────────────────────────────────────────────────────────────
+
+@app.route('/api/stats')
+@login_required
+def get_stats():
+    from datetime import date as _date
+    today_start = datetime.combine(_date.today(), datetime.min.time())
+    crm_revenue  = db.session.query(db.func.sum(Order.total)).filter(Order.created_at >= today_start).scalar() or 0
+    crm_orders   = Order.query.filter(Order.created_at >= today_start).count()
+    shop_revenue = db.session.query(db.func.sum(Sale.total)).filter(Sale.created_at >= today_start).scalar() or 0
+    shop_sales   = Sale.query.filter(Sale.created_at >= today_start).count()
+    low_stock    = Product.query.filter(Product.quantity <= 3).count()
+    out_of_stock = Product.query.filter(Product.quantity == 0).count()
+    total_clients = Client.query.count()
+    return jsonify({
+        'crm_revenue': int(crm_revenue),
+        'crm_orders': crm_orders,
+        'shop_revenue': int(shop_revenue),
+        'shop_sales': shop_sales,
+        'low_stock': low_stock,
+        'out_of_stock': out_of_stock,
+        'total_clients': total_clients,
+    })
 
 
 # ── CRM API ───────────────────────────────────────────────────────────────────────

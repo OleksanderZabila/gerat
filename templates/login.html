@@ -4,104 +4,288 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вхід — СТО «Герат»</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root {
-            --bg-base: #0d1117; --bg-card: #161b22; --bg-item: #1c2128;
-            --accent: #f97316; --accent-dim: rgba(249,115,22,.12);
-            --success: #22c55e; --danger: #ef4444;
-            --text: #e6edf3; --muted: #8b949e; --border: #30363d;
+            --bg-base:#070d16; --bg-card:#0c1520; --bg-item:#111e2e;
+            --accent:#f97316; --accent-dim:rgba(249,115,22,.14);
+            --success:#22c55e; --danger:#ef4444;
+            --text:#dde8f5; --muted:#7c8fa8; --border:#1c2e44;
         }
-        *, *::before, *::after { box-sizing: border-box; }
+        *,*::before,*::after{box-sizing:border-box;}
+        html,body{height:100%;margin:0;}
         body {
-            background: var(--bg-base); color: var(--text);
+            background: var(--bg-base);
+            background-image: radial-gradient(ellipse at 70% 50%, rgba(249,115,22,.05) 0%, transparent 60%),
+                              radial-gradient(ellipse at 10% 80%, rgba(96,165,250,.04) 0%, transparent 50%);
+            color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 14px; min-height: 100vh;
-            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
         }
-        .login-wrap { width: 100%; max-width: 380px; padding: 16px; }
-        .login-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+
+        /* Decorative car behind the card */
+        .bg-car {
+            position: fixed;
+            right: -20px;
+            bottom: -10px;
+            width: 55vw;
+            max-width: 640px;
+            opacity: .07;
+            pointer-events: none;
+            filter: drop-shadow(0 0 40px rgba(249,115,22,.3));
+        }
+        .bg-car-left {
+            position: fixed;
+            left: -40px;
+            top: 40%;
+            width: 260px;
+            opacity: .04;
+            pointer-events: none;
+            transform: scaleX(-1) rotate(-10deg);
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            background: var(--accent);
+            pointer-events: none;
+            animation: float linear infinite;
+            opacity: 0;
+        }
+        @keyframes float {
+            0%   { opacity:0; transform:translateY(0) scale(1); }
+            10%  { opacity:.3; }
+            90%  { opacity:.15; }
+            100% { opacity:0; transform:translateY(-100vh) scale(.5); }
+        }
+
+        .login-wrap { position: relative; z-index: 10; width: 100%; max-width: 400px; padding: 16px; }
+
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(249,115,22,.05);
+        }
+
         .login-head {
-            background: var(--bg-item); border-bottom: 1px solid var(--border);
-            padding: 32px 28px 24px; text-align: center;
+            background: linear-gradient(135deg, rgba(249,115,22,.12) 0%, rgba(249,115,22,.04) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 36px 32px 28px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .login-logo { font-size: 2.6rem; color: var(--accent); line-height: 1; }
-        .login-title { font-size: 1.25rem; font-weight: 700; margin-top: 10px; }
-        .login-sub { color: var(--muted); font-size: .8rem; margin-top: 4px; }
-        .login-body { padding: 28px; }
-        .login-foot { padding: 12px 28px; background: var(--bg-item); border-top: 1px solid var(--border); text-align: center; }
-        .form-label { color: var(--muted); font-size: .77rem; margin-bottom: 4px; display: block; }
+        .login-head::before {
+            content: '';
+            position: absolute;
+            top: -20px; left: -20px; right: -20px; bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(249,115,22,.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .login-logo {
+            font-size: 3rem;
+            color: var(--accent);
+            line-height: 1;
+            filter: drop-shadow(0 0 16px rgba(249,115,22,.5));
+            position: relative;
+        }
+        .login-title { font-size: 1.3rem; font-weight: 800; margin-top: 12px; letter-spacing: -.3px; position: relative; }
+        .login-sub { color: var(--muted); font-size: .8rem; margin-top: 5px; position: relative; }
+
+        /* Mini car decoration in header */
+        .head-car {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 120px;
+            opacity: .12;
+            pointer-events: none;
+        }
+
+        .login-body { padding: 28px 32px; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-label {
+            display: flex; align-items: center; gap: 6px;
+            color: var(--muted); font-size: .76rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .5px;
+            margin-bottom: 6px;
+        }
+        .form-label i { font-size: .85rem; }
         .form-control {
-            background: var(--bg-item) !important; border: 1px solid var(--border) !important;
-            color: var(--text) !important; border-radius: 7px; font-size: .875rem;
-            padding: 9px 12px; width: 100%;
+            width: 100%; padding: 11px 14px;
+            background: var(--bg-item); border: 1px solid var(--border);
+            color: var(--text); border-radius: 8px; font-size: .9rem;
+            transition: border-color .15s, box-shadow .15s;
         }
-        .form-control:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent-dim) !important; outline: none; }
-        .form-control::placeholder { color: var(--muted) !important; }
-        .btn-login {
-            width: 100%; padding: 10px; border-radius: 7px; border: none;
-            background: var(--accent); color: #fff; font-weight: 600; font-size: .9rem;
-            cursor: pointer; transition: background .15s; margin-top: 4px;
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
         }
-        .btn-login:hover { background: #ea6c0a; }
+        .form-control::placeholder { color: #3d5068; }
+        .pwd-wrap { position: relative; }
+        .pwd-wrap .form-control { padding-right: 42px; }
+        .pwd-eye {
+            position: absolute; right: 12px; top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer; color: var(--muted); font-size: 1rem;
+            transition: color .15s;
+        }
+        .pwd-eye:hover { color: var(--accent); }
+
         .alert-err {
-            background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
-            color: #fca5a5; border-radius: 7px; padding: 9px 12px;
-            font-size: .82rem; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+            background: rgba(239,68,68,.08);
+            border: 1px solid rgba(239,68,68,.25);
+            color: #fca5a5; border-radius: 8px;
+            padding: 10px 14px; font-size: .83rem;
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 20px;
         }
-        .ver { color: var(--muted); font-size: .72rem; }
-        .role-hint { background: var(--bg-base); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-top: 18px; font-size: .78rem; color: var(--muted); }
-        .role-hint span { color: var(--accent); font-weight: 600; }
+
+        .btn-login {
+            width: 100%; padding: 12px;
+            background: linear-gradient(135deg, #f97316, #ea6c0a);
+            color: #fff; border: none; border-radius: 8px;
+            font-weight: 700; font-size: .95rem; letter-spacing: .2px;
+            cursor: pointer;
+            transition: transform .1s, box-shadow .15s;
+            box-shadow: 0 4px 20px rgba(249,115,22,.3);
+        }
+        .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(249,115,22,.4); }
+        .btn-login:active { transform: translateY(0); }
+
+        .roles-hint {
+            background: var(--bg-item);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-top: 20px;
+        }
+        .roles-hint-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 10px; }
+        .role-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .role-item:last-child { margin-bottom: 0; }
+        .role-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: .85rem; flex-shrink: 0; }
+        .ri-admin { background: rgba(249,115,22,.15); color: var(--accent); }
+        .ri-mechanic { background: rgba(96,165,250,.15); color: #60a5fa; }
+        .ri-cashier { background: rgba(34,197,94,.15); color: #22c55e; }
+        .role-text strong { display: block; font-size: .82rem; }
+        .role-text span { color: var(--muted); font-size: .74rem; }
+
+        .login-foot {
+            background: var(--bg-item);
+            border-top: 1px solid var(--border);
+            padding: 12px 32px;
+            text-align: center;
+            color: var(--muted);
+            font-size: .72rem;
+        }
+        .login-foot .ver { color: var(--accent); font-weight: 600; }
     </style>
 </head>
 <body>
+
+<!-- Background decorative cars -->
+<img src="/static/img/car-hero.svg" class="bg-car" alt="">
+<img src="/static/img/car-side.svg" class="bg-car-left" alt="">
+
+<!-- Particles -->
+<div class="particle" style="left:15%;width:3px;height:3px;animation-duration:8s;animation-delay:0s;"></div>
+<div class="particle" style="left:35%;width:2px;height:2px;animation-duration:12s;animation-delay:2s;"></div>
+<div class="particle" style="left:60%;width:4px;height:4px;animation-duration:9s;animation-delay:4s;"></div>
+<div class="particle" style="left:80%;width:2px;height:2px;animation-duration:11s;animation-delay:1s;"></div>
+<div class="particle" style="left:50%;width:3px;height:3px;animation-duration:14s;animation-delay:6s;"></div>
+
 <div class="login-wrap">
     <div class="login-card">
         <div class="login-head">
             <div class="login-logo"><i class="bi bi-tools"></i></div>
             <div class="login-title">СТО «Герат»</div>
-            <div class="login-sub">Система управління послугами</div>
+            <div class="login-sub">Система управління послугами та магазином</div>
+            <!-- Mini car in corner -->
+            <img src="/static/img/car-side.svg" class="head-car" alt=""
+                 style="color:var(--accent);">
         </div>
+
         <div class="login-body">
             {% if error %}
-            <div class="alert-err"><i class="bi bi-exclamation-circle-fill"></i>{{ error }}</div>
+            <div class="alert-err">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <span>{{ error }}</span>
+            </div>
             {% endif %}
+
             <form method="POST" autocomplete="on">
-                <div class="mb-3">
-                    <label class="form-label">Логін</label>
-                    <input name="username" class="form-control" placeholder="admin" autofocus autocomplete="username">
+                <div class="form-group">
+                    <label class="form-label"><i class="bi bi-person"></i> Логін</label>
+                    <input name="username" class="form-control" placeholder="admin"
+                           autofocus autocomplete="username">
                 </div>
-                <div class="mb-4">
-                    <label class="form-label">Пароль</label>
-                    <div style="position:relative;">
-                        <input name="password" id="pwdInput" type="password" class="form-control" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px;">
-                        <i class="bi bi-eye" id="pwdToggle" onclick="togglePwd()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:.95rem;"></i>
+                <div class="form-group">
+                    <label class="form-label"><i class="bi bi-lock"></i> Пароль</label>
+                    <div class="pwd-wrap">
+                        <input name="password" id="pwdInput" type="password"
+                               class="form-control" placeholder="••••••••"
+                               autocomplete="current-password">
+                        <i class="bi bi-eye pwd-eye" id="pwdEye" onclick="togglePwd()"></i>
                     </div>
                 </div>
-                <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right me-2"></i>Увійти</button>
+                <button type="submit" class="btn-login">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Увійти в систему
+                </button>
             </form>
-            <div class="role-hint">
-                <div style="margin-bottom:5px;font-weight:600;color:var(--text);">Ролі в системі:</div>
-                <div><span>Адмін</span> — повний доступ (CRM + Магазин)</div>
-                <div><span>Механік</span> — тільки CRM</div>
-                <div><span>Касир</span> — тільки Магазин</div>
+
+            <div class="roles-hint">
+                <div class="roles-hint-title">Ролі в системі</div>
+                <div class="role-item">
+                    <div class="role-icon ri-admin"><i class="bi bi-shield-fill-check"></i></div>
+                    <div class="role-text">
+                        <strong>Адміністратор</strong>
+                        <span>Повний доступ — CRM + Магазин + Користувачі</span>
+                    </div>
+                </div>
+                <div class="role-item">
+                    <div class="role-icon ri-mechanic"><i class="bi bi-tools"></i></div>
+                    <div class="role-text">
+                        <strong>Механік</strong>
+                        <span>Тільки CRM — авто, послуги, клієнти, замовлення</span>
+                    </div>
+                </div>
+                <div class="role-item">
+                    <div class="role-icon ri-cashier"><i class="bi bi-bag-check"></i></div>
+                    <div class="role-text">
+                        <strong>Касир</strong>
+                        <span>Тільки Магазин — продажі, склад, каталог</span>
+                    </div>
+                </div>
             </div>
         </div>
+
         <div class="login-foot">
-            <span class="ver">v{{ version }} · СТО «Герат»</span>
+            <span class="ver">v{{ version }}</span> · СТО «Герат» · Всі права захищено
         </div>
     </div>
 </div>
+
 <script>
 function togglePwd() {
     const i = document.getElementById('pwdInput');
-    const t = document.getElementById('pwdToggle');
-    if (i.type === 'password') { i.type = 'text'; t.className = 'bi bi-eye-slash'; }
-    else { i.type = 'password'; t.className = 'bi bi-eye'; }
+    const e = document.getElementById('pwdEye');
+    if (i.type === 'password') { i.type = 'text'; e.className = 'bi bi-eye-slash pwd-eye'; }
+    else { i.type = 'password'; e.className = 'bi bi-eye pwd-eye'; }
 }
-document.querySelector('form').addEventListener('keydown', e => {
-    if (e.key === 'Enter') e.currentTarget.submit();
+// Start particles
+document.querySelectorAll('.particle').forEach(p => {
+    p.style.bottom = '-10px';
+    p.style.left = (10 + Math.random() * 80) + '%';
 });
 </script>
 </body>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 90" fill="currentColor">
+  <!-- Shadow -->
+  <ellipse cx="110" cy="82" rx="90" ry="5" fill="currentColor" opacity="0.15"/>
+  <!-- Body lower -->
+  <path d="M18,58 Q18,48 30,48 L190,48 Q202,48 202,58 L202,68 Q202,72 198,72 L22,72 Q18,72 18,68 Z"/>
+  <!-- Body upper / cabin -->
+  <path d="M48,48 Q55,26 72,20 L148,20 Q165,26 172,48 Z"/>
+  <!-- Front bumper detail -->
+  <rect x="194" y="54" width="10" height="10" rx="3"/>
+  <!-- Rear detail -->
+  <rect x="16" y="54" width="8" height="10" rx="3"/>
+  <!-- Windshield -->
+  <path d="M72,46 Q77,28 88,24 L132,24 Q143,28 148,46 Z" fill="white" opacity="0.12"/>
+  <!-- Front wheel -->
+  <circle cx="62" cy="72" r="20"/>
+  <circle cx="62" cy="72" r="12" fill="#111e2e"/>
+  <circle cx="62" cy="72" r="5" fill="currentColor" opacity="0.6"/>
+  <!-- Rear wheel -->
+  <circle cx="158" cy="72" r="20"/>
+  <circle cx="158" cy="72" r="12" fill="#111e2e"/>
+  <circle cx="158" cy="72" r="5" fill="currentColor" opacity="0.6"/>
+  <!-- Headlight -->
+  <rect x="198" y="50" width="6" height="6" rx="2" fill="#f59e0b" opacity="0.8"/>
+  <!-- Tail light -->
+  <rect x="16" y="50" width="5" height="6" rx="2" fill="#ef4444" opacity="0.8"/>
+</svg>

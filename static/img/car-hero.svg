@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 180" fill="none">
+  <!-- Shadow/ground -->
+  <ellipse cx="210" cy="162" rx="140" ry="10" fill="#f97316" opacity="0.06"/>
+  <!-- Smoke trail (decorative) -->
+  <path d="M60,80 C40,70 20,75 10,60 C5,50 15,40 25,45 C10,38 15,22 30,28 C22,18 35,8 48,18"
+        stroke="#7c8fa8" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <!-- Car body base -->
+  <path d="M80,110 Q80,90 100,90 L340,90 Q360,90 360,110 L360,130 Q360,138 350,138 L90,138 Q80,138 80,130 Z"
+        fill="#c2410c"/>
+  <!-- Car body upper -->
+  <path d="M118,90 Q132,55 158,45 L270,45 Q296,55 310,90 Z" fill="#ea580c"/>
+  <!-- Muscle car hood bulge -->
+  <path d="M290,90 Q310,75 340,82 L360,90 Z" fill="#b45309"/>
+  <!-- Roof detail -->
+  <path d="M168,88 Q178,55 192,48 L258,48 Q272,55 282,88 Z" fill="#f97316"/>
+  <!-- Windshield -->
+  <path d="M170,86 Q178,60 192,53 L258,53 Q272,60 280,86 Z" fill="white" opacity="0.1"/>
+  <!-- Stripe down the middle -->
+  <rect x="215" y="45" width="20" height="93" fill="#1e0a00" opacity="0.4" rx="2"/>
+  <!-- Front wheel arch -->
+  <circle cx="130" cy="138" r="30" fill="#0c1520"/>
+  <circle cx="130" cy="138" r="22" fill="#1a2333"/>
+  <circle cx="130" cy="138" r="13" fill="#c2410c"/>
+  <circle cx="130" cy="138" r="6" fill="#0c1520"/>
+  <!-- Rear wheel arch -->
+  <circle cx="305" cy="138" r="30" fill="#0c1520"/>
+  <circle cx="305" cy="138" r="22" fill="#1a2333"/>
+  <circle cx="305" cy="138" r="13" fill="#c2410c"/>
+  <circle cx="305" cy="138" r="6" fill="#0c1520"/>
+  <!-- Front grille + headlight -->
+  <rect x="352" y="98" width="14" height="8" rx="3" fill="#f59e0b" opacity="0.9"/>
+  <rect x="352" y="112" width="14" height="4" rx="2" fill="#f59e0b" opacity="0.4"/>
+  <!-- Rear -->
+  <rect x="74" y="98" width="10" height="8" rx="3" fill="#ef4444" opacity="0.8"/>
+  <!-- Exhaust pipes -->
+  <rect x="88" y="132" width="16" height="5" rx="2" fill="#374151"/>
+  <rect x="88" y="140" width="16" height="5" rx="2" fill="#374151"/>
+</svg>

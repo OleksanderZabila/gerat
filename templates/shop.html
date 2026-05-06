@@ -8,154 +8,186 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --bg-base:#0d1117; --bg-card:#161b22; --bg-item:#1c2128; --bg-hover:#262c36;
-            --accent:#f97316; --accent-dim:rgba(249,115,22,.12);
-            --success:#22c55e; --danger:#ef4444; --warning:#f59e0b; --info:#3b82f6;
-            --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+            --bg-base:#070d16; --bg-card:#0c1520; --bg-item:#111e2e; --bg-hover:#172638;
+            --accent:#f97316; --accent-dim:rgba(249,115,22,.14);
+            --success:#22c55e; --success-dim:rgba(34,197,94,.12);
+            --danger:#ef4444; --warning:#f59e0b; --info:#60a5fa;
+            --text:#dde8f5; --muted:#7c8fa8; --border:#1c2e44;
         }
         *,*::before,*::after{box-sizing:border-box;}
         html,body{height:100%;margin:0;}
         body{background:var(--bg-base);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;}
-        ::-webkit-scrollbar{width:5px;height:5px;}
+        ::-webkit-scrollbar{width:4px;height:4px;}
         ::-webkit-scrollbar-track{background:transparent;}
         ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 
         /* ── Topbar ── */
-        .topbar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:12px;height:46px;}
-        .topbar-logo{color:var(--accent);font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;}
-        .mode-switcher{display:flex;gap:3px;background:var(--bg-item);border:1px solid var(--border);border-radius:7px;padding:3px;}
-        .mode-btn{padding:4px 12px;border-radius:5px;border:none;background:none;color:var(--muted);font-size:.8rem;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px;transition:background .12s,color .12s;}
+        .topbar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:12px;height:48px;flex-shrink:0;}
+        .topbar-logo{color:var(--accent);font-weight:800;font-size:1rem;display:flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;letter-spacing:-.2px;}
+        .mode-switcher{display:flex;gap:3px;background:var(--bg-item);border:1px solid var(--border);border-radius:8px;padding:3px;}
+        .mode-btn{padding:4px 14px;border-radius:6px;border:none;background:none;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px;transition:background .12s,color .12s;}
         .mode-btn:hover{color:var(--text);}
-        .mode-btn.active{background:var(--accent);color:#fff;}
+        .mode-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(249,115,22,.3);}
         .topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
-        .topbar-user{display:flex;align-items:center;gap:7px;font-size:.83rem;}
-        .role-badge{font-size:.7rem;padding:2px 8px;border-radius:9px;font-weight:600;}
+        .topbar-user{display:flex;align-items:center;gap:7px;font-size:.82rem;}
+        .role-badge{font-size:.68rem;padding:2px 8px;border-radius:9px;font-weight:700;letter-spacing:.2px;}
         .role-admin{background:rgba(249,115,22,.18);color:var(--accent);}
-        .role-mechanic{background:rgba(59,130,246,.18);color:var(--info);}
-        .role-cashier{background:rgba(34,197,94,.18);color:var(--success);}
-        .btn-icon{background:none;border:none;padding:4px 6px;border-radius:5px;cursor:pointer;transition:background .12s;line-height:1;color:var(--muted);}
+        .role-mechanic{background:rgba(96,165,250,.18);color:var(--info);}
+        .role-cashier{background:var(--success-dim);color:var(--success);}
+        .btn-icon{background:none;border:none;padding:5px 7px;border-radius:6px;cursor:pointer;transition:background .12s;line-height:1;color:var(--muted);display:flex;align-items:center;justify-content:center;}
         .btn-icon:hover{background:var(--bg-hover);color:var(--text);}
 
+        /* Stats strip in topbar */
+        .stat-pill{display:flex;align-items:center;gap:5px;background:var(--bg-item);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.75rem;color:var(--muted);white-space:nowrap;}
+        .stat-pill strong{color:var(--text);font-weight:700;}
+        .stat-pill.warn-pill{border-color:rgba(245,158,11,.3);color:var(--warning);}
+        .stat-pill.warn-pill strong{color:var(--warning);}
+
         /* ── Layout ── */
-        .main-grid{display:grid;grid-template-columns:1fr 310px;gap:14px;padding:14px 20px 36px;}
-        @media(max-width:991px){.main-grid{grid-template-columns:1fr;}}
-        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
-        .panel-head{background:var(--bg-item);border-bottom:1px solid var(--border);padding:0 14px;display:flex;align-items:flex-end;}
-        .tab-btn{padding:10px 13px;border:none;border-bottom:2px solid transparent;background:none;color:var(--muted);font-size:.84rem;cursor:pointer;transition:color .15s,border-color .15s;white-space:nowrap;}
+        .main-wrap{display:flex;flex-direction:column;height:calc(100vh - 48px);}
+        .main-grid{display:grid;grid-template-columns:1fr 310px;gap:14px;padding:14px 20px 36px;flex:1;overflow:hidden;}
+        @media(max-width:991px){.main-grid{grid-template-columns:1fr;overflow:auto;}}
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;}
+        .panel-head{background:var(--bg-item);border-bottom:1px solid var(--border);padding:0 14px;display:flex;align-items:flex-end;flex-shrink:0;}
+        .tab-btn{padding:11px 14px;border:none;border-bottom:2px solid transparent;background:none;color:var(--muted);font-size:.82rem;font-weight:600;cursor:pointer;transition:color .15s,border-color .15s;white-space:nowrap;}
         .tab-btn:hover{color:var(--text);}
         .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
-        .tab-btn i{margin-right:4px;}
-        .tab-pane{display:none;padding:14px;}
-        .tab-pane.active{display:block;}
-        .sec-title{font-size:.71rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px;}
+        .tab-btn i{margin-right:5px;}
+        .tab-pane{display:none;padding:14px;flex:1;overflow:hidden;flex-direction:column;}
+        .tab-pane.active{display:flex;}
+        .sec-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;}
 
         /* ── Forms ── */
-        .form-control,.form-select{background:var(--bg-item)!important;border:1px solid var(--border)!important;color:var(--text)!important;border-radius:6px;font-size:.875rem;}
-        .form-control:focus,.form-select:focus{border-color:var(--accent)!important;box-shadow:0 0 0 2px var(--accent-dim)!important;}
-        .form-control::placeholder{color:var(--muted)!important;}
-        .form-label{color:var(--muted);font-size:.77rem;margin-bottom:4px;}
-        .btn{border-radius:6px;font-size:.82rem;padding:5px 11px;}
-        .btn-accent{background:var(--accent);color:#fff;border:none;}
-        .btn-accent:hover{background:#ea6c0a;color:#fff;}
-        .btn-ok{background:var(--success);color:#fff;border:none;}
-        .btn-ok:hover{background:#16a34a;color:#fff;}
+        .form-control,.form-select{background:var(--bg-item)!important;border:1px solid var(--border)!important;color:var(--text)!important;border-radius:7px;font-size:.875rem;}
+        .form-control:focus,.form-select:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px var(--accent-dim)!important;}
+        .form-control::placeholder{color:#3d5068!important;}
+        .form-label{color:var(--muted);font-size:.75rem;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;}
+        .btn{border-radius:7px;font-size:.82rem;padding:6px 13px;font-weight:600;}
+        .btn-accent{background:linear-gradient(135deg,#f97316,#ea6c0a);color:#fff;border:none;box-shadow:0 2px 10px rgba(249,115,22,.25);}
+        .btn-accent:hover{background:linear-gradient(135deg,#fb923c,#f97316);color:#fff;}
+        .btn-ok{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;box-shadow:0 2px 10px rgba(34,197,94,.2);}
+        .btn-ok:hover{background:linear-gradient(135deg,#4ade80,#22c55e);color:#fff;}
         .btn-ghost{background:var(--bg-hover);color:var(--text);border:1px solid var(--border);}
-        .btn-ghost:hover{background:#333;color:var(--text);}
-        .search-wrap{position:relative;margin-bottom:10px;}
-        .search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+        .btn-ghost:hover{background:var(--bg-item);border-color:var(--muted);}
+        .search-wrap{position:relative;margin-bottom:10px;flex-shrink:0;}
+        .search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:.9rem;}
         .search-wrap input{padding-left:32px;}
 
         /* ── Category pills ── */
-        .cat-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
-        .cat-pill{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg-item);color:var(--muted);font-size:.78rem;cursor:pointer;transition:all .12s;}
+        .cat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;flex-shrink:0;}
+        .cat-pill{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--bg-item);color:var(--muted);font-size:.76rem;font-weight:600;cursor:pointer;transition:all .12s;}
         .cat-pill:hover{border-color:var(--accent);color:var(--text);}
-        .cat-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+        .cat-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(249,115,22,.3);}
 
         /* ── Product rows ── */
-        .prod-row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);gap:10px;cursor:pointer;transition:background .12s;}
+        .prod-list{overflow-y:auto;flex:1;border:1px solid var(--border);border-radius:8px;background:var(--bg-base);}
+        .prod-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(28,46,68,.6);gap:10px;cursor:pointer;transition:background .1s;}
         .prod-row:hover{background:var(--bg-hover);}
         .prod-row:last-child{border-bottom:none;}
         .prod-info{flex:1;min-width:0;}
-        .prod-name{font-size:.87rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .prod-meta{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap;}
-        .prod-price{color:var(--accent);font-weight:700;font-size:.9rem;white-space:nowrap;margin-right:4px;}
-        .stock-ok{background:rgba(34,197,94,.12);color:var(--success);font-size:.72rem;padding:2px 7px;border-radius:9px;}
-        .stock-low{background:rgba(245,158,11,.12);color:var(--warning);font-size:.72rem;padding:2px 7px;border-radius:9px;}
-        .stock-out{background:rgba(239,68,68,.12);color:var(--danger);font-size:.72rem;padding:2px 7px;border-radius:9px;}
-        .tag-cat{background:var(--bg-hover);color:var(--muted);font-size:.7rem;padding:2px 7px;border-radius:9px;}
-        .add-btn{background:var(--success);border:none;color:#fff;border-radius:6px;padding:5px 10px;font-size:.85rem;cursor:pointer;flex-shrink:0;transition:background .12s;}
-        .add-btn:hover{background:#16a34a;}
-        .add-btn:disabled{background:var(--bg-hover);color:var(--muted);cursor:not-allowed;}
-
-        /* ── Inventory table ── */
-        .inv-table{width:100%;border-collapse:collapse;}
-        .inv-table tr{border-bottom:1px solid var(--border);}
-        .inv-table tr:hover{background:var(--bg-hover);}
-        .inv-table td,.inv-table th{padding:8px 12px;font-size:.83rem;}
-        .inv-table th{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;background:var(--bg-item);}
-        .qty-ctrl{display:flex;align-items:center;gap:4px;}
-        .qty-btn{background:var(--bg-hover);border:1px solid var(--border);color:var(--text);border-radius:5px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;line-height:1;}
-        .qty-btn:hover{background:var(--border);}
-        .qty-val{min-width:28px;text-align:center;font-weight:600;font-size:.85rem;}
-
-        /* ── Sales list ── */
-        .list-row{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
-        .list-row:hover{background:var(--bg-hover);}
-        .list-name{font-weight:600;font-size:.87rem;}
-        .list-sub{color:var(--muted);font-size:.76rem;margin-top:2px;}
+        .prod-name{font-size:.875rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+        .prod-meta{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;align-items:center;}
+        .tag-cat{background:rgba(96,165,250,.1);color:#60a5fa;font-size:.69rem;padding:2px 7px;border-radius:9px;font-weight:600;}
+        .tag-bar{background:var(--bg-hover);color:var(--muted);font-size:.69rem;padding:2px 7px;border-radius:9px;}
+        .stock-ok{background:var(--success-dim);color:var(--success);font-size:.7rem;padding:2px 8px;border-radius:9px;font-weight:600;}
+        .stock-low{background:rgba(245,158,11,.12);color:var(--warning);font-size:.7rem;padding:2px 8px;border-radius:9px;font-weight:600;}
+        .stock-out{background:rgba(239,68,68,.1);color:var(--danger);font-size:.7rem;padding:2px 8px;border-radius:9px;font-weight:600;}
+        .prod-price{color:var(--accent);font-weight:800;font-size:.95rem;white-space:nowrap;min-width:80px;text-align:right;}
+        .add-btn{background:var(--success);border:none;color:#fff;border-radius:7px;padding:6px 11px;font-size:.85rem;cursor:pointer;flex-shrink:0;transition:all .12s;box-shadow:0 2px 8px rgba(34,197,94,.2);}
+        .add-btn:hover{background:#16a34a;transform:scale(1.05);}
+        .add-btn:active{transform:scale(.97);}
+        .add-btn:disabled{background:var(--bg-hover);color:var(--muted);cursor:not-allowed;box-shadow:none;transform:none;}
 
         /* ── Cart ── */
         .cart-panel{display:flex;flex-direction:column;}
-        .cart-head{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.04));border-bottom:1px solid rgba(34,197,94,.25);padding:11px 16px;display:flex;justify-content:space-between;align-items:center;}
-        .cart-title{font-weight:700;font-size:.92rem;}
-        .cart-total{color:var(--success);font-weight:700;font-size:1.05rem;}
-        .cart-item{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:8px;}
-        .cart-item-name{flex:1;font-size:.83rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-        .cart-item-price{color:var(--success);font-weight:600;font-size:.83rem;white-space:nowrap;}
-        .cart-item-rm{color:var(--danger);cursor:pointer;opacity:.5;font-size:.85rem;transition:opacity .15s;flex-shrink:0;}
-        .cart-item-rm:hover{opacity:1;}
-        .cart-foot{padding:11px;border-top:1px solid var(--border);background:var(--bg-item);display:flex;flex-direction:column;gap:7px;}
-        .qty-ctrl-sm{display:flex;align-items:center;gap:3px;flex-shrink:0;}
-        .qb{background:var(--bg-hover);border:1px solid var(--border);color:var(--text);border-radius:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;line-height:1;}
-        .qb:hover{background:var(--border);}
-        .qv{min-width:22px;text-align:center;font-size:.82rem;font-weight:600;}
-
-        /* ── Scroll boxes ── */
-        .scroll-box{overflow-y:auto;border:1px solid var(--border);border-radius:7px;background:var(--bg-base);}
-        @media(min-width:992px){
-            body{overflow:hidden;}
-            .scroll-prod{height:calc(100vh - 338px);}
-            .scroll-sales{height:calc(100vh - 278px);}
-            .scroll-inv{height:calc(100vh - 310px);}
-            .scroll-cart{height:calc(100vh - 356px);}
+        .cart-head{
+            background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(34,197,94,.04));
+            border-bottom:1px solid rgba(34,197,94,.2);
+            padding:13px 16px;
+            display:flex;justify-content:space-between;align-items:center;
+            flex-shrink:0;
         }
-        @media(max-width:991px){.scroll-prod,.scroll-sales,.scroll-inv,.scroll-cart{max-height:320px;}}
+        .cart-title{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:8px;}
+        .cart-count{background:var(--success);color:#fff;border-radius:10px;padding:1px 7px;font-size:.72rem;font-weight:700;}
+        .cart-total{color:var(--success);font-weight:800;font-size:1.1rem;}
+        .cart-items{overflow-y:auto;flex:1;}
+        .cart-item{display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid rgba(28,46,68,.5);gap:8px;}
+        .cart-item:hover{background:rgba(23,38,56,.4);}
+        .cart-item-name{flex:1;font-size:.82rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+        .cart-item-subtotal{color:var(--success);font-weight:700;font-size:.82rem;white-space:nowrap;min-width:64px;text-align:right;}
+        .cart-item-rm{color:var(--danger);cursor:pointer;opacity:.4;font-size:.8rem;transition:opacity .15s;flex-shrink:0;padding:3px;}
+        .cart-item-rm:hover{opacity:1;}
+
+        /* Inline qty input */
+        .qty-ctrl-sm{display:flex;align-items:center;gap:3px;flex-shrink:0;}
+        .qb{background:var(--bg-item);border:1px solid var(--border);color:var(--text);border-radius:5px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.95rem;line-height:1;transition:background .1s,border-color .1s;user-select:none;}
+        .qb:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+        /* Clickable qty number → inline input */
+        .qty-inline{
+            width:34px;text-align:center;
+            background:transparent;border:1px solid transparent;
+            border-radius:5px;color:var(--text);font-weight:700;font-size:.83rem;
+            padding:2px 1px;cursor:pointer;
+            -moz-appearance:textfield;
+        }
+        .qty-inline:hover{border-color:var(--border);background:var(--bg-item);}
+        .qty-inline:focus{border-color:var(--accent);background:var(--bg-item);outline:none;cursor:text;box-shadow:0 0 0 2px var(--accent-dim);}
+        .qty-inline::-webkit-inner-spin-button,.qty-inline::-webkit-outer-spin-button{-webkit-appearance:none;}
+
+        .cart-foot{padding:10px 12px;border-top:1px solid var(--border);background:var(--bg-item);display:flex;flex-direction:column;gap:7px;flex-shrink:0;}
+
+        /* ── Inventory table ── */
+        .inv-scroll{overflow-y:auto;flex:1;border:1px solid var(--border);border-radius:8px;background:var(--bg-base);}
+        .inv-table{width:100%;border-collapse:collapse;}
+        .inv-table tr{border-bottom:1px solid rgba(28,46,68,.6);}
+        .inv-table tbody tr:hover{background:var(--bg-hover);}
+        .inv-table td,.inv-table th{padding:9px 12px;font-size:.82rem;}
+        .inv-table th{color:var(--muted);font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.4px;background:var(--bg-item);border-bottom:1px solid var(--border);position:sticky;top:0;}
+        .qty-ctrl{display:flex;align-items:center;gap:4px;}
+        .qty-btn{background:var(--bg-hover);border:1px solid var(--border);color:var(--text);border-radius:5px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;line-height:1;transition:all .1s;}
+        .qty-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+        .qty-val{min-width:26px;text-align:center;font-weight:700;font-size:.83rem;}
+
+        /* ── Sales list ── */
+        .sales-scroll{overflow-y:auto;flex:1;border:1px solid var(--border);border-radius:8px;background:var(--bg-base);}
+        .list-row{padding:11px 14px;border-bottom:1px solid rgba(28,46,68,.6);cursor:pointer;transition:background .1s;}
+        .list-row:hover{background:var(--bg-hover);}
+        .list-row:last-child{border-bottom:none;}
+        .list-name{font-weight:700;font-size:.87rem;}
+        .list-sub{color:var(--muted);font-size:.74rem;margin-top:2px;}
 
         /* ── Modals ── */
-        .modal-content{background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:10px;}
-        .modal-header{background:var(--bg-item);border-bottom:1px solid var(--border);padding:12px 16px;}
-        .modal-footer{border-top:1px solid var(--border);padding:10px 16px;}
-        .btn-close{filter:invert(1) brightness(.8);}
-        .modal-title{font-size:.95rem;font-weight:600;}
+        .modal-content{background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+        .modal-header{background:var(--bg-item);border-bottom:1px solid var(--border);padding:14px 18px;}
+        .modal-footer{border-top:1px solid var(--border);padding:11px 18px;}
+        .btn-close{filter:invert(1) brightness(.6);}
+        .modal-title{font-size:.95rem;font-weight:700;}
 
         /* ── Toast ── */
-        .toast-box{position:fixed;top:14px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:7px;}
-        .toast-item{background:var(--bg-item);border:1px solid var(--border);border-radius:8px;padding:9px 13px;display:flex;align-items:center;gap:9px;min-width:220px;max-width:310px;box-shadow:0 4px 16px rgba(0,0,0,.4);animation:fadeInR .18s ease;}
+        .toast-box{position:fixed;top:14px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;}
+        .toast-item{background:var(--bg-item);border:1px solid var(--border);border-radius:9px;padding:10px 14px;display:flex;align-items:center;gap:9px;min-width:220px;max-width:310px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:fadeInR .18s ease;pointer-events:all;}
         .toast-item.t-success{border-left:3px solid var(--success);}
         .toast-item.t-error{border-left:3px solid var(--danger);}
         .toast-item.t-info{border-left:3px solid var(--info);}
-        .toast-msg{flex:1;font-size:.83rem;}
-        @keyframes fadeInR{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+        .toast-item.t-warn{border-left:3px solid var(--warning);}
+        .toast-msg{flex:1;font-size:.83rem;line-height:1.3;}
+        @keyframes fadeInR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
 
-        .empty{text-align:center;padding:28px 16px;color:var(--muted);}
-        .empty i{font-size:2rem;opacity:.4;display:block;margin-bottom:8px;}
-        .empty p{margin:0;font-size:.83rem;}
+        .empty{text-align:center;padding:32px 16px;color:var(--muted);}
+        .empty i{font-size:2.4rem;opacity:.3;display:block;margin-bottom:10px;}
+        .empty p{margin:0;font-size:.82rem;line-height:1.6;}
+        .empty img{width:80px;opacity:.12;display:block;margin:0 auto 10px;}
 
         /* ── Status bar ── */
-        .statusbar{position:fixed;bottom:0;left:0;right:0;height:22px;background:var(--bg-card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:.7rem;color:var(--muted);z-index:100;user-select:none;}
-        .statusbar-ver{color:var(--accent);font-weight:600;}
+        .statusbar{position:fixed;bottom:0;left:0;right:0;height:22px;background:var(--bg-card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:.69rem;color:var(--muted);z-index:100;user-select:none;}
+        .statusbar-ver{color:var(--accent);font-weight:700;}
 
-        /* ── Print ── */
+        /* ── Barcode scanner indicator ── */
+        .scanner-badge{display:none;align-items:center;gap:5px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:7px;padding:3px 10px;font-size:.73rem;color:var(--success);animation:pulse 1.5s ease-in-out infinite;}
+        .scanner-badge.visible{display:flex;}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+        /* Print */
         #print-area{display:none;}
         @media print{body>*:not(#print-area){display:none!important;}#print-area{display:block!important;font-family:Arial,sans-serif;}.statusbar{display:none!important;}}
     </style>
@@ -165,13 +197,29 @@
 
 <!-- Topbar -->
 <div class="topbar">
-    <a class="topbar-logo" href="/shop"><i class="bi bi-shop"></i> Магазин</a>
+    <a class="topbar-logo" href="/shop"><i class="bi bi-shop me-1"></i>Магазин</a>
     {% if user.role == 'admin' %}
     <div class="mode-switcher">
         <a href="/" class="mode-btn"><i class="bi bi-car-front"></i> CRM</a>
         <a href="/shop" class="mode-btn active"><i class="bi bi-shop"></i> Магазин</a>
     </div>
     {% endif %}
+
+    <!-- Today stats -->
+    <div class="stat-pill ms-2">
+        <i class="bi bi-calendar-check" style="color:var(--success)"></i>
+        Сьогодні: <strong id="statSales">—</strong> продажів · <strong id="statRev">—</strong>
+    </div>
+    <div class="stat-pill warn-pill" id="lowStockPill" style="display:none;">
+        <img src="/static/img/engine.svg" style="width:14px;height:14px;filter:invert(1) sepia(1) saturate(5) hue-rotate(15deg);" alt="">
+        Мало: <strong id="statLow">0</strong>
+    </div>
+
+    <!-- Scanner indicator (hidden until activated) -->
+    <div class="scanner-badge" id="scannerBadge">
+        <i class="bi bi-upc-scan"></i> Сканер
+    </div>
+
     <div class="topbar-right">
         <div class="topbar-user">
             <i class="bi bi-person-circle" style="color:var(--muted);font-size:1.1rem;"></i>
@@ -186,56 +234,66 @@
     </div>
 </div>
 
-<!-- Main grid -->
+<div class="main-wrap">
 <div class="main-grid">
-    <!-- LEFT: tabs -->
+
+    <!-- LEFT panel -->
     <div class="panel">
         <div class="panel-head">
-            <button class="tab-btn active" id="tab-catalog" onclick="switchTab('catalog')"><i class="bi bi-grid"></i>Каталог</button>
-            <button class="tab-btn" id="tab-sales" onclick="switchTab('sales')"><i class="bi bi-receipt"></i>Продажі</button>
-            <button class="tab-btn" id="tab-inv" onclick="switchTab('inv')"><i class="bi bi-boxes"></i>Склад</button>
+            <button class="tab-btn active" id="tab-catalog" onclick="switchTab('catalog')"><i class="bi bi-grid-3x3-gap"></i>Каталог</button>
+            <button class="tab-btn" id="tab-sales"   onclick="switchTab('sales')">  <i class="bi bi-receipt"></i>Продажі</button>
+            <button class="tab-btn" id="tab-inv"     onclick="switchTab('inv')">    <i class="bi bi-boxes"></i>Склад</button>
         </div>
 
         <!-- Каталог -->
-        <div class="tab-pane active" id="pane-catalog">
-            <div class="search-wrap">
-                <i class="bi bi-search"></i>
-                <input type="text" class="form-control" id="prodSearch" placeholder="Пошук товару..." oninput="filterCatalog()">
+        <div class="tab-pane active" id="pane-catalog" style="gap:0;">
+            <div style="padding:0;flex:1;display:flex;flex-direction:column;overflow:hidden;">
+                <div style="padding:12px 14px 0;">
+                    <div class="search-wrap">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" id="prodSearch" placeholder="Пошук товару, штрихкоду..." oninput="filterCatalog()">
+                    </div>
+                    <div class="cat-pills" id="catPills"></div>
+                </div>
+                <div class="prod-list" id="prodList" style="margin:0 14px 14px;"></div>
             </div>
-            <div class="cat-pills" id="catPills"></div>
-            <div class="scroll-box scroll-prod" id="prodList"></div>
         </div>
 
         <!-- Продажі -->
-        <div class="tab-pane" id="pane-sales">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="sec-title">Історія продажів</span>
-                <button class="btn btn-ghost" onclick="loadSales()"><i class="bi bi-arrow-clockwise"></i></button>
+        <div class="tab-pane" id="pane-sales" style="flex-direction:column;gap:0;">
+            <div style="padding:12px 14px 0;flex-shrink:0;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="sec-title" style="margin:0;">Історія продажів</span>
+                    <button class="btn btn-ghost btn-sm" onclick="loadSales()"><i class="bi bi-arrow-clockwise me-1"></i>Оновити</button>
+                </div>
+                <div class="search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="saleSearch" placeholder="Пошук по клієнту або касиру..." oninput="filterSales()">
+                </div>
             </div>
-            <div class="search-wrap">
-                <i class="bi bi-search"></i>
-                <input type="text" class="form-control" id="saleSearch" placeholder="Пошук по клієнту або касиру..." oninput="filterSales()">
-            </div>
-            <div class="scroll-box scroll-sales" id="salesList"></div>
+            <div class="sales-scroll" id="salesList" style="margin:0 14px 14px;"></div>
         </div>
 
         <!-- Склад -->
-        <div class="tab-pane" id="pane-inv">
-            <div class="d-flex gap-2 mb-2 flex-wrap">
-                <button class="btn btn-accent" onclick="openModal('addProdModal')"><i class="bi bi-plus-lg me-1"></i>Товар</button>
-                <button class="btn btn-ghost" onclick="openModal('addCatModal')"><i class="bi bi-tag me-1"></i>Категорія</button>
-                <div class="search-wrap flex-fill mb-0" style="margin-bottom:0!important;">
-                    <i class="bi bi-search"></i>
-                    <input type="text" class="form-control" id="invSearch" placeholder="Пошук..." oninput="filterInv()">
+        <div class="tab-pane" id="pane-inv" style="flex-direction:column;gap:0;">
+            <div style="padding:12px 14px 0;flex-shrink:0;">
+                <div class="d-flex gap-2 mb-2 flex-wrap align-items-center">
+                    <button class="btn btn-accent btn-sm" onclick="openModal('addProdModal')"><i class="bi bi-plus-lg me-1"></i>Товар</button>
+                    <button class="btn btn-ghost btn-sm" onclick="openModal('addCatModal')"><i class="bi bi-tag me-1"></i>Категорія</button>
+                    <div class="search-wrap flex-fill mb-0">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" id="invSearch" placeholder="Пошук..." oninput="filterInv()">
+                    </div>
                 </div>
+                <div id="invStats" style="display:flex;gap:6px;margin-bottom:8px;font-size:.74rem;color:var(--muted);"></div>
             </div>
-            <div class="scroll-box scroll-inv">
+            <div class="inv-scroll" style="margin:0 14px 14px;">
                 <table class="inv-table">
                     <thead><tr>
                         <th>Назва</th><th>Категорія</th>
-                        <th style="text-align:right">Ціна</th>
-                        <th style="text-align:center">Склад</th>
-                        <th></th>
+                        <th style="text-align:right;">Ціна</th>
+                        <th style="text-align:center;">Склад</th>
+                        <th style="text-align:right;"></th>
                     </tr></thead>
                     <tbody id="invTable"></tbody>
                 </table>
@@ -246,20 +304,35 @@
     <!-- RIGHT: Cart -->
     <div class="panel cart-panel">
         <div class="cart-head">
-            <span class="cart-title"><i class="bi bi-cart3 me-2" style="color:var(--success)"></i>Продаж</span>
+            <div class="cart-title">
+                <i class="bi bi-cart3" style="color:var(--success);font-size:1.1rem;"></i>
+                Продаж
+                <span class="cart-count" id="cartCount" style="display:none;"></span>
+            </div>
             <span class="cart-total" id="cartTotal">0 грн</span>
         </div>
-        <div class="scroll-box scroll-cart" id="cartList" style="border:none;border-radius:0;flex:1;"></div>
+        <div class="cart-items" id="cartList">
+            <div class="empty">
+                <img src="/static/img/car-side.svg" alt="" style="color:var(--muted);">
+                <p>Додайте товари<br>з каталогу</p>
+            </div>
+        </div>
         <div class="cart-foot">
             <div class="d-flex gap-2">
-                <button class="btn btn-ghost flex-fill" id="clearBtn" onclick="clearCart()" disabled><i class="bi bi-trash me-1"></i>Очистити</button>
-                <button class="btn btn-ghost flex-fill" id="saveBtn" onclick="openModal('saveSaleModal')" disabled><i class="bi bi-save me-1"></i>Зберегти</button>
+                <button class="btn btn-ghost flex-fill" id="clearBtn" onclick="clearCart()" disabled>
+                    <i class="bi bi-trash me-1"></i>Очистити
+                </button>
+                <button class="btn btn-ghost flex-fill" id="saveBtn" onclick="openModal('saveSaleModal')" disabled>
+                    <i class="bi bi-save me-1"></i>Зберегти
+                </button>
             </div>
             <button class="btn btn-ok w-100 fw-bold" id="printBtn" onclick="printReceipt()" disabled>
                 <i class="bi bi-printer me-2"></i>ДРУКУВАТИ ЧЕК
             </button>
         </div>
     </div>
+
+</div>
 </div>
 
 <!-- ======================== MODALS ======================== -->
@@ -267,28 +340,35 @@
 <!-- Add category -->
 <div class="modal fade" id="addCatModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-tag me-2" style="color:var(--accent)"></i>Нова категорія</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body p-3"><label class="form-label">Назва</label><input id="catName" class="form-control" placeholder="Мастила, Гальма..."></div>
-    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="addCategory()">Зберегти</button></div>
+    <div class="modal-body p-3">
+        <label class="form-label">Назва категорії</label>
+        <input id="catName" class="form-control" placeholder="Мастила, Гальма, Фільтри...">
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="addCategory()"><i class="bi bi-check-lg me-1"></i>Зберегти</button></div>
 </div></div></div>
 
 <!-- Add product -->
 <div class="modal fade" id="addProdModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-plus-circle me-2" style="color:var(--success)"></i>Новий товар</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body p-3">
-        <div class="mb-2"><label class="form-label">Назва *</label><input id="apName" class="form-control" placeholder="Моторне масло 5W30"></div>
-        <div class="mb-2"><label class="form-label">Категорія</label>
+        <div class="mb-2"><label class="form-label">Назва *</label><input id="apName" class="form-control" placeholder="Моторне масло 5W30 1L"></div>
+        <div class="mb-2">
+            <label class="form-label">Категорія</label>
             <select id="apCat" class="form-select"><option value="">— без категорії —</option></select>
         </div>
         <div class="row g-2 mb-2">
             <div class="col-6"><label class="form-label">Ціна продажу (грн)</label><input id="apSell" type="number" class="form-control" placeholder="500" min="0"></div>
-            <div class="col-6"><label class="form-label">Ціна закупки (грн)</label><input id="apBuy" type="number" class="form-control" placeholder="300" min="0"></div>
+            <div class="col-6"><label class="form-label">Ціна закупки (грн)</label><input id="apBuy" type="number" class="form-control" placeholder="320" min="0"></div>
         </div>
         <div class="row g-2">
-            <div class="col-6"><label class="form-label">Кількість</label><input id="apQty" type="number" class="form-control" placeholder="0" min="0"></div>
-            <div class="col-6"><label class="form-label">Штрихкод</label><input id="apBarcode" class="form-control" placeholder="Необов'язково"></div>
+            <div class="col-6"><label class="form-label">Кількість на складі</label><input id="apQty" type="number" class="form-control" placeholder="10" min="0"></div>
+            <div class="col-6">
+                <label class="form-label">Штрихкод <span style="color:var(--muted);text-transform:none;font-size:.7rem;">(для сканера)</span></label>
+                <input id="apBarcode" class="form-control" placeholder="4820...">
+            </div>
         </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-ok" onclick="addProduct()">Додати</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-ok" onclick="addProduct()"><i class="bi bi-check-lg me-1"></i>Додати</button></div>
 </div></div></div>
 
 <!-- Edit product -->
@@ -296,9 +376,7 @@
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-pencil me-2" style="color:var(--warning)"></i>Редагувати товар</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body p-3">
         <div class="mb-2"><label class="form-label">Назва</label><input id="epName" class="form-control"></div>
-        <div class="mb-2"><label class="form-label">Категорія</label>
-            <select id="epCat" class="form-select"><option value="">— без категорії —</option></select>
-        </div>
+        <div class="mb-2"><label class="form-label">Категорія</label><select id="epCat" class="form-select"><option value="">— без категорії —</option></select></div>
         <div class="row g-2 mb-2">
             <div class="col-6"><label class="form-label">Ціна продажу</label><input id="epSell" type="number" class="form-control" min="0"></div>
             <div class="col-6"><label class="form-label">Ціна закупки</label><input id="epBuy" type="number" class="form-control" min="0"></div>
@@ -308,17 +386,22 @@
             <div class="col-6"><label class="form-label">Штрихкод</label><input id="epBarcode" class="form-control"></div>
         </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn" style="background:var(--warning);color:#000;" id="editProdSaveBtn">Зберегти</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn" style="background:var(--warning);color:#000;font-weight:700;" id="editProdSaveBtn"><i class="bi bi-check-lg me-1"></i>Зберегти</button></div>
 </div></div></div>
 
 <!-- Save sale -->
 <div class="modal fade" id="saveSaleModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-bag-check me-2" style="color:var(--success)"></i>Оформити продаж</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body p-3">
-        <div class="mb-3"><label class="form-label">Клієнт <span style="color:var(--muted)">(необов'язково)</span></label><input id="saleClient" class="form-control" placeholder="Ім'я або контакт"></div>
-        <div><label class="form-label">Примітки</label><textarea id="saleNotes" class="form-control" rows="2" placeholder="Додатково..."></textarea></div>
+        <div id="saleSummary" style="background:var(--bg-item);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.83rem;"></div>
+        <div class="mb-3"><label class="form-label">Клієнт <span style="color:var(--muted);text-transform:none;font-size:.72rem;">(необов'язково)</span></label><input id="saleClient" class="form-control" placeholder="Ім'я або контакт..."></div>
+        <div><label class="form-label">Примітки</label><textarea id="saleNotes" class="form-control" rows="2" placeholder="Будь-яка додаткова інформація..."></textarea></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-ok" onclick="saveSale()"><i class="bi bi-check-lg me-1"></i>Продати</button></div>
+    <div class="modal-footer d-flex gap-2">
+        <button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button>
+        <button class="btn btn-ok flex-fill fw-bold" onclick="saveSale()"><i class="bi bi-check-lg me-1"></i>Продати</button>
+        <button class="btn btn-ghost" onclick="printReceipt()" title="Друк без збереження"><i class="bi bi-printer"></i></button>
+    </div>
 </div></div></div>
 
 <!-- Sale detail -->
@@ -328,12 +411,12 @@
     <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Закрити</button></div>
 </div></div></div>
 
-<!-- Users modal (admin) -->
+<!-- Users modal -->
 <div class="modal fade" id="usersModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-people me-2" style="color:var(--accent)"></i>Користувачі</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-people me-2" style="color:var(--accent)"></i>Управління користувачами</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="sec-title" style="margin:0">Список користувачів</span>
+            <span class="sec-title" style="margin:0">Користувачі системи</span>
             <button class="btn btn-accent btn-sm" onclick="openModal('addUserModal')"><i class="bi bi-person-plus me-1"></i>Додати</button>
         </div>
         <div id="usersList"></div>
@@ -345,16 +428,16 @@
 <div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-person-plus me-2" style="color:var(--accent)"></i>Новий користувач</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body p-3">
-        <div class="mb-2"><label class="form-label">Логін *</label><input id="auLogin" class="form-control" placeholder="ivan"></div>
-        <div class="mb-2"><label class="form-label">Ім'я (відображається)</label><input id="auName" class="form-control" placeholder="Іван Механік"></div>
+        <div class="mb-2"><label class="form-label">Логін *</label><input id="auLogin" class="form-control" placeholder="ivan_mechanic"></div>
+        <div class="mb-2"><label class="form-label">Ім'я</label><input id="auName" class="form-control" placeholder="Іван Петренко"></div>
         <div class="mb-2"><label class="form-label">Роль</label>
             <select id="auRole" class="form-select">
-                <option value="mechanic">Механік — тільки CRM</option>
-                <option value="cashier">Касир — тільки Магазин</option>
-                <option value="admin">Адміністратор — повний доступ</option>
+                <option value="mechanic">🔧 Механік — тільки CRM</option>
+                <option value="cashier">💼 Касир — тільки Магазин</option>
+                <option value="admin">🛡️ Адміністратор — повний доступ</option>
             </select>
         </div>
-        <div><label class="form-label">Пароль *</label><input id="auPwd" type="password" class="form-control" placeholder="мін. 4 символи"></div>
+        <div><label class="form-label">Пароль * <span style="color:var(--muted);text-transform:none;font-size:.72rem;">(мін. 4 символи)</span></label><input id="auPwd" type="password" class="form-control" placeholder="мін. 4 символи"></div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="addUser()">Створити</button></div>
 </div></div></div>
@@ -371,48 +454,49 @@
                 <option value="admin">Адміністратор</option>
             </select>
         </div>
-        <div><label class="form-label">Новий пароль <span style="color:var(--muted)">(залишити порожнім — не змінювати)</span></label><input id="euPwd" type="password" class="form-control" placeholder="новий пароль..."></div>
+        <div><label class="form-label">Новий пароль <span style="color:var(--muted);text-transform:none;">(залишити порожнім — не змінювати)</span></label><input id="euPwd" type="password" class="form-control"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn" style="background:var(--warning);color:#000;" id="editUserSaveBtn">Зберегти</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn" style="background:var(--warning);color:#000;font-weight:700;" id="editUserSaveBtn">Зберегти</button></div>
 </div></div></div>
 
 <!-- Change password -->
 <div class="modal fade" id="changePwdModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-key me-2" style="color:var(--accent)"></i>Змінити пароль</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body p-3">
-        <div class="mb-2"><label class="form-label">Поточний пароль</label><input id="cpOld" type="password" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Поточний пароль</label><input id="cpOld" type="password" class="form-control"></div>
         <div><label class="form-label">Новий пароль</label><input id="cpNew" type="password" class="form-control"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="changePwd()">Зберегти</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="changePwd()"><i class="bi bi-check-lg me-1"></i>Зберегти</button></div>
 </div></div></div>
 
 <!-- Print area -->
 <div id="print-area">
-    <div style="max-width:400px;margin:0 auto;padding:20px;font-family:Arial,sans-serif;">
+    <div style="max-width:380px;margin:0 auto;padding:20px;font-family:Arial,sans-serif;">
         <div style="text-align:center;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:14px;">
-            <div style="font-size:20px;font-weight:700;">СТО «Герат» — Магазин</div>
-            <div style="color:#666;font-size:12px;margin-top:3px;">Касовий чек</div>
-            <div style="color:#999;font-size:11px;margin-top:3px;" id="printDate"></div>
+            <div style="font-size:18px;font-weight:800;">СТО «Герат»</div>
+            <div style="color:#444;font-size:11px;margin-top:2px;">Касовий чек · Магазин</div>
+            <div style="color:#888;font-size:10px;margin-top:3px;" id="printDate"></div>
         </div>
+        <div id="printClient" style="margin-bottom:10px;font-size:12px;color:#555;"></div>
         <table style="width:100%;border-collapse:collapse;margin-bottom:14px;">
-            <thead><tr style="background:#f4f4f4;">
-                <th style="text-align:left;padding:6px 10px;border:1px solid #ddd;font-size:12px;">Товар</th>
-                <th style="text-align:center;padding:6px 10px;border:1px solid #ddd;font-size:12px;">Кіл.</th>
-                <th style="text-align:right;padding:6px 10px;border:1px solid #ddd;font-size:12px;">Сума</th>
+            <thead><tr style="background:#f5f5f5;">
+                <th style="text-align:left;padding:6px 8px;border:1px solid #ddd;font-size:11px;">Товар</th>
+                <th style="text-align:center;padding:6px 8px;border:1px solid #ddd;font-size:11px;">Кіл.</th>
+                <th style="text-align:right;padding:6px 8px;border:1px solid #ddd;font-size:11px;">Сума</th>
             </tr></thead>
             <tbody id="printItems"></tbody>
-            <tfoot><tr style="font-weight:700;background:#f0f0f0;">
-                <td colspan="2" style="padding:8px 10px;border:1px solid #ddd;font-size:13px;">РАЗОМ</td>
-                <td style="text-align:right;padding:8px 10px;border:1px solid #ddd;font-size:13px;" id="printTotal"></td>
+            <tfoot><tr style="font-weight:800;background:#f0f0f0;">
+                <td colspan="2" style="padding:8px;border:1px solid #ddd;font-size:12px;">РАЗОМ</td>
+                <td style="text-align:right;padding:8px;border:1px solid #ddd;font-size:13px;" id="printTotal"></td>
             </tfoot>
         </table>
-        <div style="text-align:center;color:#aaa;font-size:11px;">Дякуємо за покупку! • СТО «Герат»</div>
+        <div style="text-align:center;color:#aaa;font-size:10px;margin-top:16px;">Дякуємо за покупку! • СТО «Герат»</div>
     </div>
 </div>
 
 <div class="statusbar">
-    <span><i class="bi bi-shop me-1"></i>Магазин</span>
-    <span><span style="color:var(--border)">v</span><span class="statusbar-ver">{{ version }}</span></span>
+    <span><i class="bi bi-shop me-1"></i>Магазин · СТО «Герат»</span>
+    <span>v<span class="statusbar-ver">{{ version }}</span></span>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -424,38 +508,43 @@ let allSales     = [];
 let allUsers     = [];
 let cart         = JSON.parse(localStorage.getItem('shopCart') || '[]');
 let activeCat    = 0;
-let prodQ        = '';
-let invQ         = '';
-let salesQ       = '';
+let prodQ = '', invQ = '', salesQ = '';
 const IS_ADMIN   = {{ 'true' if user.role == 'admin' else 'false' }};
 
 // ── MODALS ───────────────────────────────────────────────────────────────────
 const _m = {};
-function openModal(id) { if (!_m[id]) _m[id] = new bootstrap.Modal(document.getElementById(id)); _m[id].show(); }
+function openModal(id) {
+    if (!_m[id]) _m[id] = new bootstrap.Modal(document.getElementById(id));
+    _m[id].show();
+}
 function closeModal(id) { _m[id]?.hide(); }
 
 // ── TOAST ────────────────────────────────────────────────────────────────────
 function toast(msg, type = 'success') {
-    const icons = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', info:'bi-info-circle-fill' };
-    const colors = { success:'var(--success)', error:'var(--danger)', info:'var(--info)' };
-    const id = 't' + Date.now();
+    const icons = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', info:'bi-info-circle-fill', warn:'bi-exclamation-triangle-fill' };
+    const colors = { success:'var(--success)', error:'var(--danger)', info:'var(--info)', warn:'var(--warning)' };
+    const id = 't' + Date.now() + Math.random();
     document.getElementById('toastBox').insertAdjacentHTML('beforeend',
         `<div id="${id}" class="toast-item t-${type}">
             <i class="bi ${icons[type]||icons.info}" style="color:${colors[type]};font-size:1rem;flex-shrink:0;"></i>
             <span class="toast-msg">${msg}</span>
-            <i class="bi bi-x" style="cursor:pointer;color:var(--muted);" onclick="this.closest('.toast-item').remove()"></i>
+            <i class="bi bi-x" style="cursor:pointer;color:var(--muted);flex-shrink:0;" onclick="this.closest('.toast-item').remove()"></i>
         </div>`);
-    setTimeout(() => document.getElementById(id)?.remove(), 3500);
+    setTimeout(() => document.getElementById(id)?.remove(), 4000);
 }
 
 // ── API ──────────────────────────────────────────────────────────────────────
 async function api(url, data) {
     try {
-        const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+        const r = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
         const j = await r.json();
         if (!j.success && j.error) toast(j.error, 'error');
         return j;
-    } catch { toast("Помилка з'єднання", 'error'); return { success: false }; }
+    } catch { toast("Помилка з'єднання з сервером", 'error'); return { success: false }; }
 }
 
 function fmt(p) { return Number(p).toLocaleString('uk-UA') + ' грн'; }
@@ -468,15 +557,31 @@ function switchTab(t) {
         document.getElementById(`pane-${id}`).classList.toggle('active', id === t);
     });
     if (t === 'sales') loadSales();
-    if (t === 'inv')   renderInv();
+    if (t === 'inv') { renderInv(); updateInvStats(); }
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+async function loadStats() {
+    try {
+        const s = await (await fetch('/api/stats')).json();
+        document.getElementById('statSales').textContent = s.shop_sales;
+        document.getElementById('statRev').textContent = fmt(s.shop_revenue);
+        if (s.low_stock > 0) {
+            document.getElementById('lowStockPill').style.display = 'flex';
+            document.getElementById('statLow').textContent = s.low_stock;
+        }
+    } catch {}
 }
 
 // ── CATEGORY PILLS ───────────────────────────────────────────────────────────
 function renderPills() {
     const el = document.getElementById('catPills');
-    let html = `<span class="cat-pill ${activeCat===0?'active':''}" onclick="setCat(0)">Всі</span>`;
+    const counts = {};
+    allProducts.forEach(p => { if (p.category_id) counts[p.category_id] = (counts[p.category_id]||0)+1; });
+    let html = `<span class="cat-pill ${activeCat===0?'active':''}" onclick="setCat(0)">Всі (${allProducts.length})</span>`;
     allCategories.forEach(c => {
-        html += `<span class="cat-pill ${activeCat===c.id?'active':''}" onclick="setCat(${c.id})">${esc(c.name)}</span>`;
+        const cnt = counts[c.id] || 0;
+        html += `<span class="cat-pill ${activeCat===c.id?'active':''}" onclick="setCat(${c.id})">${esc(c.name)} (${cnt})</span>`;
     });
     el.innerHTML = html;
 }
@@ -484,36 +589,39 @@ function setCat(id) { activeCat = id; renderPills(); renderCatalog(); }
 
 // ── CATALOG ──────────────────────────────────────────────────────────────────
 function filterCatalog() { prodQ = document.getElementById('prodSearch').value.toLowerCase(); renderCatalog(); }
+
+function stockBadge(qty) {
+    if (qty === 0) return `<span class="stock-out"><i class="bi bi-x-circle me-1"></i>Немає</span>`;
+    if (qty <= 3)  return `<span class="stock-low"><i class="bi bi-exclamation-triangle me-1"></i>${qty} шт</span>`;
+    return `<span class="stock-ok"><i class="bi bi-check-circle me-1"></i>${qty} шт</span>`;
+}
+
 function renderCatalog() {
     const el = document.getElementById('prodList');
     let prods = allProducts;
     if (activeCat) prods = prods.filter(p => p.category_id === activeCat);
-    if (prodQ) prods = prods.filter(p => (p.name+p.barcode+p.category_name).toLowerCase().includes(prodQ));
+    if (prodQ) prods = prods.filter(p =>
+        (p.name + p.barcode + p.category_name).toLowerCase().includes(prodQ));
     if (!prods.length) {
-        el.innerHTML = '<div class="empty"><i class="bi bi-search"></i><p>Нічого не знайдено</p></div>';
+        el.innerHTML = `<div class="empty"><i class="bi bi-search"></i><p>Нічого не знайдено<br><span style="color:var(--muted)">Спробуйте інший запит</span></p></div>`;
         return;
     }
-    el.innerHTML = prods.map(p => {
-        const stockBadge = p.quantity === 0
-            ? `<span class="stock-out"><i class="bi bi-x-circle me-1"></i>Немає</span>`
-            : p.quantity <= 3
-                ? `<span class="stock-low"><i class="bi bi-exclamation-triangle me-1"></i>${p.quantity} шт</span>`
-                : `<span class="stock-ok"><i class="bi bi-check-circle me-1"></i>${p.quantity} шт</span>`;
-        return `<div class="prod-row" onclick="addToCart(${p.id},'${esc(p.name)}',${p.sell_price})">
+    el.innerHTML = prods.map(p => `
+        <div class="prod-row" onclick="addToCart(${p.id},'${esc(p.name)}',${p.sell_price})" title="Клік — додати до продажу">
             <div class="prod-info">
                 <div class="prod-name">${esc(p.name)}</div>
                 <div class="prod-meta">
                     ${p.category_name ? `<span class="tag-cat">${esc(p.category_name)}</span>` : ''}
-                    ${stockBadge}
-                    ${p.barcode ? `<span class="tag-cat"><i class="bi bi-upc me-1"></i>${esc(p.barcode)}</span>` : ''}
+                    ${stockBadge(p.quantity)}
+                    ${p.barcode ? `<span class="tag-bar"><i class="bi bi-upc me-1"></i>${esc(p.barcode)}</span>` : ''}
                 </div>
             </div>
             <span class="prod-price">${fmt(p.sell_price)}</span>
-            <button class="add-btn" ${p.quantity===0?'disabled':''} onclick="event.stopPropagation();addToCart(${p.id},'${esc(p.name)}',${p.sell_price})">
+            <button class="add-btn" ${p.quantity===0?'disabled':''} title="Додати до кошика"
+                onclick="event.stopPropagation();addToCart(${p.id},'${esc(p.name)}',${p.sell_price})">
                 <i class="bi bi-cart-plus"></i>
             </button>
-        </div>`;
-    }).join('');
+        </div>`).join('');
 }
 
 // ── CART ─────────────────────────────────────────────────────────────────────
@@ -522,35 +630,79 @@ function addToCart(id, name, price) {
     if (existing) { existing.qty++; }
     else { cart.push({ id, n: name, p: price, qty: 1 }); }
     saveCart(); renderCart();
-    toast(`«${name}»`, 'info');
+    toast(`<strong>${name}</strong> — додано`, 'info');
 }
-function incQty(idx) { if (cart[idx]) { cart[idx].qty++; saveCart(); renderCart(); } }
-function decQty(idx) { if (cart[idx]) { cart[idx].qty--; if (cart[idx].qty <= 0) cart.splice(idx, 1); saveCart(); renderCart(); } }
+
+function setQty(idx, val) {
+    const n = parseInt(val);
+    if (isNaN(n) || n <= 0) { cart.splice(idx, 1); }
+    else { cart[idx].qty = n; }
+    saveCart(); renderCart();
+}
+
+function incQty(idx) {
+    if (cart[idx]) { cart[idx].qty++; saveCart(); renderCart(); }
+}
+function decQty(idx) {
+    if (!cart[idx]) return;
+    cart[idx].qty--;
+    if (cart[idx].qty <= 0) cart.splice(idx, 1);
+    saveCart(); renderCart();
+}
 function removeFromCart(idx) { cart.splice(idx, 1); saveCart(); renderCart(); }
 function clearCart() { cart = []; saveCart(); renderCart(); toast('Кошик очищено', 'info'); }
 function saveCart() { localStorage.setItem('shopCart', JSON.stringify(cart)); }
+
 function renderCart() {
     const el = document.getElementById('cartList');
     const total = cart.reduce((s, i) => s + i.p * i.qty, 0);
-    el.innerHTML = cart.length
-        ? cart.map((item, idx) => `
+    const totalItems = cart.reduce((s, i) => s + i.qty, 0);
+
+    if (!cart.length) {
+        el.innerHTML = `<div class="empty">
+            <img src="/static/img/car-side.svg" alt="" style="color:var(--muted);">
+            <p>Кошик порожній<br><span style="font-size:.74rem;">Клікніть на товар у каталозі</span></p>
+        </div>`;
+    } else {
+        el.innerHTML = cart.map((item, idx) => `
             <div class="cart-item">
                 <span class="cart-item-name" title="${esc(item.n)}">${esc(item.n)}</span>
                 <div class="qty-ctrl-sm">
-                    <span class="qb" onclick="decQty(${idx})">−</span>
-                    <span class="qv">${item.qty}</span>
-                    <span class="qb" onclick="incQty(${idx})">+</span>
+                    <span class="qb" onclick="decQty(${idx})" title="Зменшити">−</span>
+                    <input type="number" class="qty-inline" value="${item.qty}" min="1"
+                        onclick="this.select()"
+                        onchange="setQty(${idx}, +this.value)"
+                        onkeydown="if(event.key==='Enter')this.blur()"
+                        title="Клікніть для редагування кількості">
+                    <span class="qb" onclick="incQty(${idx})" title="Збільшити">+</span>
                 </div>
-                <span class="cart-item-price">${fmt(item.p * item.qty)}</span>
-                <i class="bi bi-x-lg cart-item-rm" onclick="removeFromCart(${idx})"></i>
-            </div>`).join('')
-        : '<div class="empty"><i class="bi bi-cart-x"></i><p>Кошик порожній</p></div>';
+                <span class="cart-item-subtotal">${fmt(item.p * item.qty)}</span>
+                <i class="bi bi-x-lg cart-item-rm" onclick="removeFromCart(${idx})" title="Видалити"></i>
+            </div>`).join('');
+    }
+
     document.getElementById('cartTotal').textContent = fmt(total);
+    const countEl = document.getElementById('cartCount');
+    if (totalItems > 0) { countEl.textContent = totalItems; countEl.style.display = ''; }
+    else { countEl.style.display = 'none'; }
+
     const has = cart.length > 0;
     ['printBtn','clearBtn','saveBtn'].forEach(id => document.getElementById(id).disabled = !has);
 }
 
 // ── SAVE SALE ────────────────────────────────────────────────────────────────
+function openSaveSaleModal() {
+    const total = cart.reduce((s, i) => s + i.p * i.qty, 0);
+    document.getElementById('saleSummary').innerHTML =
+        `<div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--muted);">${cart.length} поз. · ${cart.reduce((s,i)=>s+i.qty,0)} товарів</span>
+            <span style="font-size:1.1rem;font-weight:800;color:var(--success);">${fmt(total)}</span>
+        </div>`;
+    document.getElementById('saleClient').value = '';
+    document.getElementById('saleNotes').value = '';
+    openModal('saveSaleModal');
+}
+
 async function saveSale() {
     const total = cart.reduce((s, i) => s + i.p * i.qty, 0);
     const res = await api('/api/shop/save_sale', {
@@ -560,119 +712,157 @@ async function saveSale() {
         items: JSON.stringify(cart)
     });
     if (res.success) {
-        // update local stock counts
         cart.forEach(item => {
             const p = allProducts.find(x => x.id === item.id);
             if (p) p.quantity = Math.max(0, p.quantity - item.qty);
         });
         closeModal('saveSaleModal');
-        document.getElementById('saleClient').value = '';
-        document.getElementById('saleNotes').value = '';
         clearCart();
-        renderCatalog(); renderInv();
-        toast('Продаж оформлено!');
+        renderCatalog();
+        loadStats();
+        toast(`✅ Продаж на ${fmt(total)} оформлено!`);
     }
 }
 
-// ── SALES HISTORY ────────────────────────────────────────────────────────────
+// ── SALES ────────────────────────────────────────────────────────────────────
 async function loadSales() {
-    document.getElementById('salesList').innerHTML = '<div class="empty"><i class="bi bi-hourglass-split"></i><p>Завантаження...</p></div>';
+    document.getElementById('salesList').innerHTML =
+        '<div class="empty"><i class="bi bi-hourglass-split"></i><p>Завантаження...</p></div>';
     try {
         allSales = await (await fetch('/api/shop/sales')).json();
         renderSales(allSales);
-    } catch { document.getElementById('salesList').innerHTML = '<div class="empty"><i class="bi bi-exclamation-triangle"></i><p>Помилка</p></div>'; }
+    } catch {
+        document.getElementById('salesList').innerHTML =
+            '<div class="empty"><i class="bi bi-exclamation-triangle"></i><p>Помилка завантаження</p></div>';
+    }
 }
-function filterSales() { salesQ = document.getElementById('saleSearch').value.toLowerCase(); renderSales(allSales.filter(s => ((s.client_name||'')+(s.cashier_name||'')+(s.notes||'')).toLowerCase().includes(salesQ))); }
+
+function filterSales() {
+    salesQ = document.getElementById('saleSearch').value.toLowerCase();
+    renderSales(allSales.filter(s =>
+        ((s.client_name||'')+(s.cashier_name||'')+(s.notes||'')).toLowerCase().includes(salesQ)));
+}
+
 function renderSales(list) {
     const el = document.getElementById('salesList');
-    if (!list.length) { el.innerHTML = '<div class="empty"><i class="bi bi-receipt"></i><p>Продажів немає</p></div>'; return; }
+    if (!list.length) {
+        el.innerHTML = '<div class="empty"><i class="bi bi-receipt"></i><p>Продажів немає</p></div>';
+        return;
+    }
     el.innerHTML = list.map(s => {
         const items = JSON.parse(s.items || '[]');
+        const total_qty = items.reduce((a,i)=>a+(i.qty||1),0);
         return `<div class="list-row" ondblclick="showSaleDetail(${s.id})" title="Подвійний клік — деталі">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                <div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                <div style="flex:1;min-width:0;">
                     <div class="list-name">${s.client_name ? esc(s.client_name) : '<span style="color:var(--muted)">Без клієнта</span>'}</div>
-                    <div class="list-sub"><i class="bi bi-person me-1"></i>${esc(s.cashier_name)} · ${s.created_at}</div>
+                    <div class="list-sub"><i class="bi bi-person me-1"></i>${esc(s.cashier_name)} · ${s.created_at} · ${total_qty} шт</div>
                 </div>
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="color:var(--success);font-weight:700;font-size:.9rem;">${fmt(s.total)}</span>
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <span style="color:var(--success);font-weight:800;font-size:.92rem;">${fmt(s.total)}</span>
                     ${IS_ADMIN ? `<button class="btn-icon" onclick="event.stopPropagation();delSale(${s.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>` : ''}
                 </div>
             </div>
-            ${items.length ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">${items.slice(0,4).map(i=>`<span style="background:var(--bg-hover);color:var(--muted);font-size:.7rem;padding:2px 7px;border-radius:9px;">${esc(i.n)}×${i.qty}</span>`).join('')}${items.length>4?`<span style="background:var(--bg-hover);color:var(--muted);font-size:.7rem;padding:2px 7px;border-radius:9px;">+${items.length-4}</span>`:''}</div>` : ''}
+            ${items.length ? `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;">
+                ${items.slice(0,5).map(i=>`<span style="background:var(--bg-hover);color:var(--muted);font-size:.69rem;padding:2px 7px;border-radius:9px;">${esc(i.n)}×${i.qty||1}</span>`).join('')}
+                ${items.length>5?`<span style="background:var(--bg-hover);color:var(--muted);font-size:.69rem;padding:2px 7px;border-radius:9px;">+${items.length-5}</span>`:''}
+            </div>` : ''}
         </div>`;
     }).join('');
 }
+
 function showSaleDetail(id) {
     const s = allSales.find(x => x.id === id);
     if (!s) return;
     const items = JSON.parse(s.items || '[]');
     document.getElementById('saleDetailBody').innerHTML = `
-        <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div style="padding:16px 18px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
                 <div>
                     <div style="font-size:1.05rem;font-weight:700;">${s.client_name ? esc(s.client_name) : 'Без клієнта'}</div>
-                    <div style="color:var(--muted);font-size:.8rem;"><i class="bi bi-person me-1"></i>Касир: ${esc(s.cashier_name)} · ${s.created_at}</div>
+                    <div style="color:var(--muted);font-size:.8rem;margin-top:3px;">
+                        <i class="bi bi-person me-1"></i>Касир: ${esc(s.cashier_name)} · ${s.created_at}
+                    </div>
                 </div>
-                <div style="color:var(--success);font-size:1.2rem;font-weight:700;">${fmt(s.total)}</div>
+                <div style="color:var(--success);font-size:1.3rem;font-weight:800;">${fmt(s.total)}</div>
             </div>
-            ${s.notes ? `<div style="background:var(--bg-item);border-radius:6px;padding:8px 12px;font-size:.83rem;color:var(--muted);">${esc(s.notes)}</div>` : ''}
+            ${s.notes ? `<div style="background:var(--bg-item);border-radius:7px;padding:9px 12px;font-size:.83rem;color:var(--muted);">${esc(s.notes)}</div>` : ''}
         </div>
         <div>
             ${items.map(i => `
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px;border-bottom:1px solid var(--border);">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid var(--border);">
                     <span style="font-size:.87rem;">${esc(i.n)}</span>
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <span style="color:var(--muted);font-size:.8rem;">×${i.qty}</span>
-                        <span style="color:var(--success);font-weight:600;font-size:.87rem;">${fmt(i.p * i.qty)}</span>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <span style="color:var(--muted);font-size:.8rem;">×${i.qty||1} · ${fmt(i.p)}/шт</span>
+                        <span style="color:var(--success);font-weight:700;font-size:.9rem;">${fmt(i.p*(i.qty||1))}</span>
                     </div>
                 </div>`).join('')}
         </div>`;
     openModal('saleDetailModal');
 }
+
 async function delSale(id) {
-    if (!confirm('Видалити продаж?')) return;
+    if (!confirm('Видалити цей продаж?')) return;
     const res = await api('/api/shop/delete_sale', { id });
-    if (res.success) { toast('Продаж видалено'); loadSales(); }
+    if (res.success) { toast('Продаж видалено'); loadSales(); loadStats(); }
 }
 
 // ── INVENTORY ────────────────────────────────────────────────────────────────
+function updateInvStats() {
+    const total = allProducts.length;
+    const outStock = allProducts.filter(p => p.quantity === 0).length;
+    const lowStock = allProducts.filter(p => p.quantity > 0 && p.quantity <= 3).length;
+    document.getElementById('invStats').innerHTML =
+        `<span>Всього: <strong style="color:var(--text)">${total}</strong></span>` +
+        (lowStock ? `<span style="color:var(--warning)"><i class="bi bi-exclamation-triangle me-1"></i>Мало: <strong>${lowStock}</strong></span>` : '') +
+        (outStock ? `<span style="color:var(--danger)"><i class="bi bi-x-circle me-1"></i>Немає: <strong>${outStock}</strong></span>` : '');
+}
+
 function filterInv() { invQ = document.getElementById('invSearch').value.toLowerCase(); renderInv(); }
+
 function renderInv() {
     const tb = document.getElementById('invTable');
     let prods = allProducts;
-    if (invQ) prods = prods.filter(p => (p.name+p.category_name+p.barcode).toLowerCase().includes(invQ));
+    if (invQ) prods = prods.filter(p =>
+        (p.name + p.category_name + p.barcode).toLowerCase().includes(invQ));
     if (!prods.length) {
         tb.innerHTML = '<tr><td colspan="5"><div class="empty"><i class="bi bi-boxes"></i><p>Товарів немає</p></div></td></tr>';
         return;
     }
-    tb.innerHTML = prods.map(p => {
-        const stockClass = p.quantity === 0 ? 'stock-out' : p.quantity <= 3 ? 'stock-low' : 'stock-ok';
-        return `<tr>
-            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(p.name)}">${esc(p.name)}</td>
-            <td><span style="background:var(--bg-hover);color:var(--muted);font-size:.72rem;padding:2px 7px;border-radius:9px;">${p.category_name ? esc(p.category_name) : '—'}</span></td>
-            <td style="text-align:right;color:var(--accent);font-weight:600;">${fmt(p.sell_price)}</td>
-            <td style="text-align:center;">
-                <div class="qty-ctrl" style="justify-content:center;">
-                    <span class="qty-btn" onclick="adjustStock(${p.id},-1)">−</span>
-                    <span class="qty-val ${stockClass}" style="background:none;padding:2px 6px;">${p.quantity}</span>
-                    <span class="qty-btn" onclick="adjustStock(${p.id},1)">+</span>
-                </div>
-            </td>
-            <td style="text-align:right;white-space:nowrap;">
-                <button class="btn-icon" onclick="editProduct(${p.id})" title="Редагувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
-                ${IS_ADMIN ? `<button class="btn-icon" onclick="deleteProduct(${p.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>` : ''}
-            </td>
-        </tr>`;
-    }).join('');
+    // Sort: out of stock first, then low, then ok
+    prods = [...prods].sort((a,b) => {
+        const score = p => p.quantity === 0 ? 0 : p.quantity <= 3 ? 1 : 2;
+        return score(a) - score(b) || a.name.localeCompare(b.name);
+    });
+    tb.innerHTML = prods.map(p => `<tr>
+        <td style="max-width:150px;">
+            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;" title="${esc(p.name)}">${esc(p.name)}</div>
+            ${p.barcode ? `<div style="color:var(--muted);font-size:.69rem;margin-top:2px;"><i class="bi bi-upc me-1"></i>${esc(p.barcode)}</div>` : ''}
+        </td>
+        <td>${p.category_name ? `<span class="tag-cat">${esc(p.category_name)}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+        <td style="text-align:right;color:var(--accent);font-weight:700;">${fmt(p.sell_price)}</td>
+        <td>
+            <div class="qty-ctrl" style="justify-content:center;">
+                <span class="qty-btn" onclick="adjustStock(${p.id},-1)" title="−1">−</span>
+                <span class="qty-val ${p.quantity===0?'stock-out':p.quantity<=3?'stock-low':'stock-ok'}"
+                      style="background:none;">${p.quantity}</span>
+                <span class="qty-btn" onclick="adjustStock(${p.id},1)" title="+1">+</span>
+            </div>
+        </td>
+        <td style="text-align:right;white-space:nowrap;">
+            <button class="btn-icon" onclick="editProduct(${p.id})" title="Редагувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
+            ${IS_ADMIN ? `<button class="btn-icon" onclick="deleteProduct(${p.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>` : ''}
+        </td>
+    </tr>`).join('');
 }
 
 async function adjustStock(id, delta) {
     const res = await api('/api/shop/adjust_stock', { id, delta });
     if (res.success) {
         const p = allProducts.find(x => x.id === id);
-        if (p) p.quantity = res.quantity;
-        renderInv(); renderCatalog();
+        if (p) { p.quantity = res.quantity; }
+        renderInv(); renderCatalog(); updateInvStats();
+        if (res.quantity === 0) toast(`⚠️ Товар закінчився!`, 'warn');
     }
 }
 
@@ -680,27 +870,30 @@ async function adjustStock(id, delta) {
 function populateCatSelects() {
     const opts = '<option value="">— без категорії —</option>' +
         allCategories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-    document.getElementById('apCat').innerHTML = opts;
-    document.getElementById('epCat').innerHTML = opts;
+    ['apCat','epCat'].forEach(id => document.getElementById(id).innerHTML = opts);
 }
+
 async function addProduct() {
     const res = await api('/api/shop/add_product', {
         name: document.getElementById('apName').value,
         category_id: parseInt(document.getElementById('apCat').value) || null,
-        sell_price: document.getElementById('apSell').value,
-        buy_price: document.getElementById('apBuy').value,
-        quantity: document.getElementById('apQty').value,
+        sell_price: document.getElementById('apSell').value || 0,
+        buy_price: document.getElementById('apBuy').value || 0,
+        quantity: document.getElementById('apQty').value || 0,
         barcode: document.getElementById('apBarcode').value,
     });
     if (res.success) {
-        allProducts.push(res.product); allProducts.sort((a,b)=>a.name.localeCompare(b.name));
+        allProducts.push(res.product);
+        allProducts.sort((a,b) => a.name.localeCompare(b.name));
         ['apName','apBarcode'].forEach(i => document.getElementById(i).value = '');
         ['apSell','apBuy','apQty'].forEach(i => document.getElementById(i).value = '');
         document.getElementById('apCat').value = '';
-        closeModal('addProdModal'); renderCatalog(); renderInv();
-        toast(`«${res.product.name}» додано`);
+        closeModal('addProdModal');
+        renderCatalog(); renderPills(); renderInv(); updateInvStats();
+        toast(`«${res.product.name}» — додано до складу`);
     }
 }
+
 function editProduct(id) {
     const p = allProducts.find(x => x.id === id);
     if (!p) return;
@@ -725,18 +918,21 @@ function editProduct(id) {
         if (res.success) {
             const idx = allProducts.findIndex(x => x.id === id);
             if (idx >= 0) allProducts[idx] = res.product;
-            closeModal('editProdModal'); renderCatalog(); renderInv();
+            closeModal('editProdModal');
+            renderCatalog(); renderPills(); renderInv(); updateInvStats();
             toast('Товар оновлено');
         }
     };
 }
+
 async function deleteProduct(id) {
     const p = allProducts.find(x => x.id === id);
-    if (!confirm(`Видалити «${p?.name}»?`)) return;
+    if (!confirm(`Видалити «${p?.name}»? Це незворотно.`)) return;
     const res = await api('/api/shop/delete_product', { id });
     if (res.success) {
         allProducts = allProducts.filter(x => x.id !== id);
-        renderCatalog(); renderInv(); toast('Товар видалено');
+        renderCatalog(); renderPills(); renderInv(); updateInvStats();
+        toast('Товар видалено');
     }
 }
 
@@ -747,40 +943,34 @@ async function addCategory() {
     const res = await api('/api/shop/add_category', { name });
     if (res.success) {
         allCategories.push({ id: res.id, name: res.name });
-        allCategories.sort((a,b)=>a.name.localeCompare(b.name));
+        allCategories.sort((a,b) => a.name.localeCompare(b.name));
         document.getElementById('catName').value = '';
-        closeModal('addCatModal'); renderPills(); populateCatSelects();
-        toast(`Категорія «${name}» додана`);
+        closeModal('addCatModal');
+        renderPills(); populateCatSelects();
+        toast(`Категорія «${name}» — додана`);
     }
 }
 
-// ── USERS (ADMIN) ────────────────────────────────────────────────────────────
+// ── USERS ────────────────────────────────────────────────────────────────────
 async function loadUsers() {
-    try {
-        allUsers = await (await fetch('/api/users')).json();
-        renderUsers();
-    } catch {}
+    try { allUsers = await (await fetch('/api/users')).json(); renderUsers(); } catch {}
 }
 function renderUsers() {
-    const ROLE_LABELS = { admin:'Адмін', mechanic:'Механік', cashier:'Касир' };
-    const ROLE_CLS    = { admin:'role-admin', mechanic:'role-mechanic', cashier:'role-cashier' };
+    const RL = { admin:'Адмін', mechanic:'Механік', cashier:'Касир' };
+    const RC = { admin:'role-admin', mechanic:'role-mechanic', cashier:'role-cashier' };
     document.getElementById('usersList').innerHTML = allUsers.length
         ? `<table style="width:100%;border-collapse:collapse;">
-            ${allUsers.map(u => `
-                <tr style="border-bottom:1px solid var(--border);">
-                    <td style="padding:10px 8px;">
-                        <div style="font-weight:600;font-size:.87rem;">${esc(u.display_name || u.username)}</div>
-                        <div style="color:var(--muted);font-size:.76rem;">@${esc(u.username)}</div>
-                    </td>
-                    <td style="padding:10px 8px;">
-                        <span class="role-badge ${ROLE_CLS[u.role]||''}">${ROLE_LABELS[u.role]||u.role}</span>
-                    </td>
-                    <td style="padding:10px 8px;text-align:right;white-space:nowrap;">
-                        <button class="btn-icon" onclick="openEditUser(${u.id})" title="Редагувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
-                        <button class="btn-icon" onclick="deleteUser(${u.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>
-                    </td>
-                </tr>`).join('')}
-          </table>`
+            ${allUsers.map(u => `<tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:10px 8px;">
+                    <div style="font-weight:700;font-size:.87rem;">${esc(u.display_name||u.username)}</div>
+                    <div style="color:var(--muted);font-size:.74rem;margin-top:2px;">@${esc(u.username)}</div>
+                </td>
+                <td style="padding:10px 8px;"><span class="role-badge ${RC[u.role]||''}">${RL[u.role]||u.role}</span></td>
+                <td style="padding:10px 8px;text-align:right;white-space:nowrap;">
+                    <button class="btn-icon" onclick="openEditUser(${u.id})" title="Редагувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
+                    <button class="btn-icon" onclick="deleteUser(${u.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>
+                </td>
+            </tr>`).join('')}</table>`
         : '<div class="empty"><i class="bi bi-people"></i><p>Немає користувачів</p></div>';
 }
 async function addUser() {
@@ -793,7 +983,8 @@ async function addUser() {
     if (res.success) {
         ['auLogin','auName','auPwd'].forEach(i => document.getElementById(i).value = '');
         closeModal('addUserModal');
-        await loadUsers(); toast('Користувача створено');
+        await loadUsers();
+        toast('Користувача створено');
     }
 }
 function openEditUser(id) {
@@ -805,8 +996,7 @@ function openEditUser(id) {
     openModal('editUserModal');
     document.getElementById('editUserSaveBtn').onclick = async () => {
         const res = await api('/api/edit_user', {
-            id,
-            display_name: document.getElementById('euName').value,
+            id, display_name: document.getElementById('euName').value,
             role: document.getElementById('euRole').value,
             password: document.getElementById('euPwd').value || undefined,
         });
@@ -815,7 +1005,7 @@ function openEditUser(id) {
 }
 async function deleteUser(id) {
     const u = allUsers.find(x => x.id === id);
-    if (!confirm(`Видалити «${u?.username}»?`)) return;
+    if (!confirm(`Видалити користувача «${u?.username}»?`)) return;
     const res = await api('/api/delete_user', { id });
     if (res.success) { await loadUsers(); toast('Видалено'); }
 }
@@ -826,38 +1016,73 @@ async function changePwd() {
     });
     if (res.success) {
         ['cpOld','cpNew'].forEach(i => document.getElementById(i).value = '');
-        closeModal('changePwdModal'); toast('Пароль змінено');
+        closeModal('changePwdModal');
+        toast('Пароль успішно змінено');
     }
 }
 
 // ── PRINT ────────────────────────────────────────────────────────────────────
 function printReceipt() {
+    const client = document.getElementById('saleClient')?.value;
     document.getElementById('printDate').textContent = new Date().toLocaleString('uk-UA');
+    document.getElementById('printClient').innerHTML = client ? `Клієнт: <strong>${client}</strong>` : '';
     document.getElementById('printItems').innerHTML = cart.map(i =>
-        `<tr><td style="padding:6px 10px;border:1px solid #ddd;font-size:12px;">${esc(i.n)}</td>
-             <td style="text-align:center;padding:6px 10px;border:1px solid #ddd;font-size:12px;">${i.qty}</td>
-             <td style="text-align:right;padding:6px 10px;border:1px solid #ddd;font-size:12px;">${fmt(i.p * i.qty)}</td></tr>`
-    ).join('');
-    document.getElementById('printTotal').textContent = fmt(cart.reduce((s,i) => s + i.p * i.qty, 0));
+        `<tr>
+            <td style="padding:6px 8px;border:1px solid #ddd;font-size:11px;">${esc(i.n)}</td>
+            <td style="text-align:center;padding:6px 8px;border:1px solid #ddd;font-size:11px;">${i.qty}</td>
+            <td style="text-align:right;padding:6px 8px;border:1px solid #ddd;font-size:11px;">${fmt(i.p*i.qty)}</td>
+        </tr>`).join('');
+    document.getElementById('printTotal').textContent = fmt(cart.reduce((s,i)=>s+i.p*i.qty,0));
     window.print();
 }
 
-// ── ENTER KEY ─────────────────────────────────────────────────────────────────
+// ── BARCODE SCANNER INFRASTRUCTURE ──────────────────────────────────────────
+// Barcode scanners send rapid keystrokes (< 50ms apart) ending with Enter.
+// Infrastructure is ready — activate by uncommenting processScan body and
+// adding barcode field to the Product add form.
+let _scanBuf = '', _scanTs = 0;
+document.addEventListener('keydown', e => {
+    const active = document.activeElement;
+    if (['INPUT','TEXTAREA','SELECT'].includes(active?.tagName)) return;
+    if (document.querySelector('.modal.show')) return;
+    const now = Date.now();
+    if (e.key === 'Enter' && _scanBuf.length >= 4) {
+        _processScan(_scanBuf.trim()); _scanBuf = ''; return;
+    }
+    if (e.key.length !== 1) { _scanBuf = ''; return; }
+    if (now - _scanTs > 80) _scanBuf = ''; // too slow = human typing, reset
+    _scanBuf += e.key; _scanTs = now;
+});
+function _processScan(barcode) {
+    // SCANNER FEATURE — infrastructure ready, uncomment to activate:
+    // const p = allProducts.find(x => x.barcode === barcode);
+    // if (p) { addToCart(p.id, p.name, p.sell_price); }
+    // else { toast(`Штрихкод ${barcode} не знайдено`, 'error'); }
+    console.log('[Scanner] Barcode read:', barcode);
+}
+
+// ── KEYBOARD SHORTCUTS ───────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
     const modal = document.querySelector('.modal.show');
     if (!modal) return;
     const btn = modal.querySelector('.modal-footer .btn-ok, .modal-footer .btn-accent');
-    if (btn) btn.click();
+    if (btn && document.activeElement?.tagName !== 'TEXTAREA') btn.click();
 });
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
+// ── INIT ─────────────────────────────────────────────────────────────────────
 window.onload = () => {
     renderPills();
     renderCatalog();
     renderCart();
     populateCatSelects();
-    document.getElementById('usersModal').addEventListener('show.bs.modal', loadUsers);
+    updateInvStats();
+    loadStats();
+    // Wire up save button to open modal with summary
+    document.getElementById('saveBtn').onclick = openSaveSaleModal;
+    // Load users when users modal opens
+    const um = document.getElementById('usersModal');
+    if (um) um.addEventListener('show.bs.modal', loadUsers);
 };
 </script>
 </body>
