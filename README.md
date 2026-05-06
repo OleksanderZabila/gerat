@@ -1,28 +1,272 @@
-# 🔧 Gerat Auto Service CRM
+# 🔧 СТО «Герат» — Система управління
 
-A full-stack web application designed for auto service stations to manage vehicle databases, track repair services, and dynamically generate customer invoices (repair orders).
+> Веб-система для автосервісу: CRM + Магазин запчастин в одному місці.  
+> Темний інтерфейс, ролі доступу, живі лічильники, повна робота офлайн.
 
-## 🚀 Key Features
-* **Live Search:** Instant, real-time filtering of vehicles and services.
-* **Cascade Data Management:** Full CRUD operations for vehicles with automatic cascading updates/deletions for related services.
-* **Dynamic Invoice Calculator:** An interactive cart system that calculates total costs on the fly without page reloads.
-* **Responsive UI:** Fully adaptable interface optimized for both desktop and mobile devices.
-* **Asynchronous API (AJAX):** Seamless frontend-to-database communication using the JavaScript Fetch API.
+![Python](https://img.shields.io/badge/Python-3.10+-3776ab?style=flat&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.1-black?style=flat&logo=flask)
+![SQLite](https://img.shields.io/badge/SQLite-3-003b57?style=flat&logo=sqlite&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952b3?style=flat&logo=bootstrap&logoColor=white)
+![Version](https://img.shields.io/badge/version-2.4.1-f97316?style=flat)
 
-## 🛠 Tech Stack
-* **Backend:** Python 3, Flask, SQLAlchemy (ORM)
-* **Database:** SQLite
-* **Frontend:** HTML5, CSS3, Vanilla JavaScript, Bootstrap 5
-* **Architecture:** MVC Pattern, RESTful API design
+---
 
-## ⚙️ How to run locally
-1. Clone the repository:
-   `git clone https://github.com/YOUR_USERNAME/gerat.git`
-2. Create and activate a virtual environment:
-   `python -m venv venv`
-   `venv\Scripts\activate` (for Windows)
-3. Install dependencies:
-   `pip install -r requirements.txt`
-4. Run the application:
-   `python app.py`
-5. Open your browser and navigate to `http://127.0.0.1:5000`
+## ✨ Можливості
+
+### 🔐 Авторизація та ролі
+| Роль | Доступ |
+|------|--------|
+| **Адміністратор** | Повний доступ: CRM + Магазин + Керування користувачами |
+| **Механік** | Тільки CRM — авто, послуги, клієнти, замовлення |
+| **Касир** | Тільки Магазин — продажі, склад, каталог |
+
+- Сесійна авторизація (Flask session)
+- Захищені паролі (PBKDF2-SHA256)
+- Керування користувачами (тільки адмін)
+- Зміна пароля для кожного облікового запису
+
+---
+
+### 🚗 CRM — Автосервіс
+
+**База авто**
+- Ієрархія: Марка → Модель → Послуги
+- Додавання / перейменування / видалення марок і моделей
+- Масовий імпорт через текстовий формат
+- Пошук по всій базі в реальному часі
+
+**Послуги**
+- Прив'язка послуг до конкретної моделі авто
+- Загальні послуги (без прив'язки до авто)
+- Редагування назви та ціни
+- Один клік — послуга потрапляє в рахунок
+
+**Рахунок (кошик)**
+- Накопичення послуг у поточному рахунку
+- Друк рахунку (оптимізований для принтера)
+- Збереження замовлення в базу даних
+
+**Клієнти**
+- Картка: ім'я, телефон, авто, примітки
+- Повна історія замовлень клієнта
+- Загальна сума витрат
+- Подвійний клік → розгорнутий профіль
+
+**Замовлення**
+- Список всіх замовлень із пошуком
+- Прив'язка до клієнта з бази або довільне ім'я
+- Редагування та видалення
+- Деталі: перелік послуг, дата, сума
+
+---
+
+### 🏪 Магазин запчастин
+
+**Каталог**
+- Категорії товарів (додати / перейменувати / видалити)
+- Товари: назва, штрих-код, ціна продажу, ціна закупки, залишок
+- Фільтр по категорії + пошук
+- Сортування: спочатку закінчились → мало → є
+
+**Кошик продажу**
+- Додавання товарів одним кліком
+- Inline редагування кількості — клік на цифру → поле вводу
+- Підсумок перед збереженням
+- Після продажу — автоматичне списання зі складу
+
+**Продажі**
+- Список усіх продажів із деталями
+- Ім'я касира, клієнт, перелік товарів, сума
+- Видалення (тільки адмін)
+
+**Склад**
+- Поточні залишки всіх товарів
+- Коригування кількості
+- Індикатор: 🔴 закінчилось / 🟡 мало (≤ 3) / 🟢 є
+
+---
+
+### 📊 Статистика в топбарі
+
+Оновлюється **кожну хвилину** без перезавантаження сторінки:
+
+- **CRM**: замовлень сьогодні · виручка CRM · кількість клієнтів
+- **Магазин**: продажів сьогодні · виручка · товарів із малим залишком
+
+---
+
+### 🔫 Підтримка сканера штрих-кодів
+
+Інфраструктура готова й закоментована. Для активації — розкоментувати 3 рядки в `shop.html`.  
+Підтримує USB HID сканери: визначення за швидкістю вводу (< 80 мс між символами).
+
+---
+
+## 🛠️ Стек
+
+| Компонент | Технологія |
+|-----------|-----------|
+| Backend | Python 3.10+, Flask 3.1 |
+| ORM | Flask-SQLAlchemy 3.1 / SQLAlchemy 2.0 |
+| База даних | SQLite |
+| Frontend | Bootstrap 5.3 + Bootstrap Icons |
+| Безпека | Werkzeug `pbkdf2:sha256` |
+| UI | Кастомний темний дизайн (`#070d16` base) |
+
+---
+
+## 🚀 Запуск
+
+### 1. Клонувати репозиторій
+```bash
+git clone https://github.com/OleksanderZabila/gerat.git
+cd gerat
+```
+
+### 2. Створити та активувати venv
+```bash
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# Linux / macOS
+source venv/bin/activate
+```
+
+### 3. Встановити залежності
+```bash
+pip install flask flask-sqlalchemy werkzeug
+```
+
+### 4. Запустити
+```bash
+python app.py
+```
+
+Відкрити у браузері: **http://127.0.0.1:5000**
+
+### 5. Перший вхід
+```
+Логін:  admin
+Пароль: admin
+```
+> ⚠️ Змінити пароль після першого входу — кнопка 🔑 у правому верхньому куті
+
+---
+
+## 📁 Структура проєкту
+
+```
+gerat/
+├── app.py                  # Flask app, моделі БД, всі API роути
+├── templates/
+│   ├── login.html          # Сторінка входу з декоративним авто
+│   ├── index.html          # CRM (авто, послуги, клієнти, замовлення)
+│   └── shop.html           # Магазин (каталог, продажі, склад)
+├── static/
+│   └── img/
+│       ├── car-hero.svg    # Декоративний автомобіль на сторінці входу
+│       ├── car-side.svg    # Силует авто (порожній стан CRM)
+│       └── engine.svg      # Іконка чек-двигуна (повідомлення про помилки)
+└── instance/
+    └── gerat.db            # SQLite база даних (створюється автоматично)
+```
+
+---
+
+## 🗂️ API Роути
+
+<details>
+<summary>Розгорнути повний список</summary>
+
+### Авторизація
+| Метод | Роут | Опис |
+|-------|------|------|
+| GET/POST | `/login` | Авторизація |
+| GET | `/logout` | Вихід |
+
+### Сторінки
+| Метод | Роут | Опис |
+|-------|------|------|
+| GET | `/` | CRM — механік або адмін |
+| GET | `/shop` | Магазин — касир або адмін |
+
+### Користувачі (тільки адмін)
+| Метод | Роут | Опис |
+|-------|------|------|
+| GET | `/api/users` | Список користувачів |
+| POST | `/api/add_user` | Додати користувача |
+| POST | `/api/edit_user` | Редагувати користувача |
+| POST | `/api/delete_user` | Видалити користувача |
+| POST | `/api/change_password` | Змінити пароль |
+
+### CRM — Авто та послуги
+| Метод | Роут | Опис |
+|-------|------|------|
+| GET | `/api/get_data` | Вся база авто + послуг |
+| POST | `/api/add_car` | Додати марку / модель |
+| POST | `/api/rename_brand` | Перейменувати марку |
+| POST | `/api/rename_model` | Перейменувати модель |
+| POST | `/api/delete_brand` | Видалити марку |
+| POST | `/api/delete_model` | Видалити модель |
+| POST | `/api/add_service` | Додати послугу до моделі |
+| POST | `/api/edit_service` | Редагувати послугу |
+| POST | `/api/delete_service` | Видалити послугу |
+| POST | `/api/add_general_service` | Додати загальну послугу |
+| POST | `/api/edit_general_service` | Редагувати загальну послугу |
+| POST | `/api/delete_general_service` | Видалити загальну послугу |
+| POST | `/api/bulk_import` | Масовий імпорт |
+
+### CRM — Замовлення та клієнти
+| Метод | Роут | Опис |
+|-------|------|------|
+| GET | `/api/orders` | Список замовлень |
+| POST | `/api/save_order` | Зберегти замовлення |
+| POST | `/api/edit_order` | Редагувати замовлення |
+| POST | `/api/delete_order` | Видалити замовлення |
+| GET | `/api/clients` | Список клієнтів |
+| GET | `/api/client/<id>` | Профіль клієнта |
+| POST | `/api/add_client` | Додати клієнта |
+| POST | `/api/edit_client` | Редагувати клієнта |
+| POST | `/api/delete_client` | Видалити клієнта |
+
+### Магазин
+| Метод | Роут | Опис |
+|-------|------|------|
+| POST | `/api/shop/add_category` | Додати категорію |
+| POST | `/api/shop/rename_category` | Перейменувати категорію |
+| POST | `/api/shop/delete_category` | Видалити категорію |
+| POST | `/api/shop/add_product` | Додати товар |
+| POST | `/api/shop/edit_product` | Редагувати товар |
+| POST | `/api/shop/delete_product` | Видалити товар |
+| POST | `/api/shop/adjust_stock` | Коригувати залишок |
+| GET | `/api/shop/sales` | Список продажів |
+| POST | `/api/shop/save_sale` | Зберегти продаж |
+| POST | `/api/shop/delete_sale` | Видалити продаж |
+
+### Статистика
+| Метод | Роут | Опис |
+|-------|------|------|
+| GET | `/api/stats` | Статистика за поточний день |
+
+</details>
+
+---
+
+## 📋 Changelog
+
+| Версія | Що нового |
+|--------|-----------|
+| **v2.4.1** | Перемальовано SVG-авто на логіні (тепер видимий), іконка чек-двигуна для помилок, кнопка редагування загальних послуг |
+| **v2.4.0** | Глибокий темний дизайн (`#070d16`), SVG-декорації, статистика в топбарі, inline редагування кількості в кошику, інфраструктура сканера штрих-кодів |
+| **v2.3.0** | Система авторизації (3 ролі), повний модуль магазину, перемикач CRM / Магазин |
+| **v2.2.0** | Виправлення після видалення БД, прив'язка клієнтів до замовлень, зміцнення JS |
+| **v2.1.0** | Вкладка клієнтів, CRUD замовлень, друк рахунку |
+| **v2.0.0** | Статусбар з версією, редагування замовлень, профіль клієнта з історією |
+
+---
+
+## 📄 Ліцензія
+
+Приватний проєкт. Всі права захищено © СТО «Герат»
