@@ -35,16 +35,16 @@
             bottom: -10px;
             width: 55vw;
             max-width: 640px;
-            opacity: .07;
+            opacity: .18;
             pointer-events: none;
-            filter: drop-shadow(0 0 40px rgba(249,115,22,.3));
+            filter: drop-shadow(0 0 50px rgba(249,115,22,.45));
         }
         .bg-car-left {
             position: fixed;
             left: -40px;
             top: 40%;
             width: 260px;
-            opacity: .04;
+            opacity: .07;
             pointer-events: none;
             transform: scaleX(-1) rotate(-10deg);
         }
@@ -147,8 +147,12 @@
             border: 1px solid rgba(239,68,68,.25);
             color: #fca5a5; border-radius: 8px;
             padding: 10px 14px; font-size: .83rem;
-            display: flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; gap: 10px;
             margin-bottom: 20px;
+        }
+        .alert-err .err-icon {
+            width: 26px; height: 18px; flex-shrink: 0;
+            color: #ef4444;
         }
 
         .btn-login {
@@ -218,7 +222,7 @@
         <div class="login-body">
             {% if error %}
             <div class="alert-err">
-                <i class="bi bi-exclamation-circle-fill"></i>
+                <img src="/static/img/engine.svg" class="err-icon" alt="!" style="filter:invert(40%) sepia(1) saturate(6) hue-rotate(320deg);">
                 <span>{{ error }}</span>
             </div>
             {% endif %}

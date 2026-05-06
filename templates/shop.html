@@ -521,12 +521,15 @@ function closeModal(id) { _m[id]?.hide(); }
 
 // ── TOAST ────────────────────────────────────────────────────────────────────
 function toast(msg, type = 'success') {
-    const icons = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', info:'bi-info-circle-fill', warn:'bi-exclamation-triangle-fill' };
+    const icons = { success:'bi-check-circle-fill', info:'bi-info-circle-fill', warn:'bi-exclamation-triangle-fill' };
     const colors = { success:'var(--success)', error:'var(--danger)', info:'var(--info)', warn:'var(--warning)' };
     const id = 't' + Date.now() + Math.random();
+    const iconHtml = type === 'error'
+        ? `<img src="/static/img/engine.svg" style="width:22px;height:16px;flex-shrink:0;filter:invert(30%) sepia(1) saturate(8) hue-rotate(320deg);" alt="">`
+        : `<i class="bi ${icons[type]||icons.info}" style="color:${colors[type]||colors.info};font-size:1rem;flex-shrink:0;"></i>`;
     document.getElementById('toastBox').insertAdjacentHTML('beforeend',
         `<div id="${id}" class="toast-item t-${type}">
-            <i class="bi ${icons[type]||icons.info}" style="color:${colors[type]};font-size:1rem;flex-shrink:0;"></i>
+            ${iconHtml}
             <span class="toast-msg">${msg}</span>
             <i class="bi bi-x" style="cursor:pointer;color:var(--muted);flex-shrink:0;" onclick="this.closest('.toast-item').remove()"></i>
         </div>`);

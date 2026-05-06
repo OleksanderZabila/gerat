@@ -1,38 +1,92 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 180" fill="none">
-  <!-- Shadow/ground -->
-  <ellipse cx="210" cy="162" rx="140" ry="10" fill="#f97316" opacity="0.06"/>
-  <!-- Smoke trail (decorative) -->
-  <path d="M60,80 C40,70 20,75 10,60 C5,50 15,40 25,45 C10,38 15,22 30,28 C22,18 35,8 48,18"
-        stroke="#7c8fa8" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.35"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 190" fill="none">
+  <!-- Ground glow -->
+  <ellipse cx="218" cy="170" rx="155" ry="11" fill="#f97316" opacity="0.18"/>
+  <!-- Exhaust smoke -->
+  <path d="M72,90 C52,80 30,84 18,68 C12,56 24,44 36,50 C18,42 24,24 40,32 C30,20 46,8 60,20"
+        stroke="#dde8f5" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.25"/>
+
   <!-- Car body base -->
-  <path d="M80,110 Q80,90 100,90 L340,90 Q360,90 360,110 L360,130 Q360,138 350,138 L90,138 Q80,138 80,130 Z"
-        fill="#c2410c"/>
-  <!-- Car body upper -->
-  <path d="M118,90 Q132,55 158,45 L270,45 Q296,55 310,90 Z" fill="#ea580c"/>
-  <!-- Muscle car hood bulge -->
-  <path d="M290,90 Q310,75 340,82 L360,90 Z" fill="#b45309"/>
-  <!-- Roof detail -->
-  <path d="M168,88 Q178,55 192,48 L258,48 Q272,55 282,88 Z" fill="#f97316"/>
+  <path d="M88,116 Q88,96 108,96 L352,96 Q374,96 374,116 L374,138 Q374,147 363,147 L99,147 Q88,147 88,138 Z"
+        fill="#f97316"/>
+  <!-- Side accent stripe -->
+  <path d="M88,126 L374,126" stroke="#ff9a3c" stroke-width="2.5" opacity="0.6"/>
+  <!-- Lower body shadow -->
+  <path d="M108,138 L363,138 Q374,138 374,147 L99,147 Q88,147 88,138 Z"
+        fill="#c2410c" opacity="0.7"/>
+
+  <!-- Car body upper cabin -->
+  <path d="M128,96 Q144,58 172,47 L278,47 Q306,58 320,96 Z" fill="#ff8533"/>
+  <!-- Hood bulge -->
+  <path d="M300,96 Q322,80 352,87 L374,96 Z" fill="#ea6c10"/>
+  <!-- Roof panel -->
+  <path d="M176,94 Q188,58 200,50 L262,50 Q276,58 288,94 Z" fill="#ffaa55"/>
+
   <!-- Windshield -->
-  <path d="M170,86 Q178,60 192,53 L258,53 Q272,60 280,86 Z" fill="white" opacity="0.1"/>
-  <!-- Stripe down the middle -->
-  <rect x="215" y="45" width="20" height="93" fill="#1e0a00" opacity="0.4" rx="2"/>
-  <!-- Front wheel arch -->
-  <circle cx="130" cy="138" r="30" fill="#0c1520"/>
-  <circle cx="130" cy="138" r="22" fill="#1a2333"/>
-  <circle cx="130" cy="138" r="13" fill="#c2410c"/>
-  <circle cx="130" cy="138" r="6" fill="#0c1520"/>
-  <!-- Rear wheel arch -->
-  <circle cx="305" cy="138" r="30" fill="#0c1520"/>
-  <circle cx="305" cy="138" r="22" fill="#1a2333"/>
-  <circle cx="305" cy="138" r="13" fill="#c2410c"/>
-  <circle cx="305" cy="138" r="6" fill="#0c1520"/>
-  <!-- Front grille + headlight -->
-  <rect x="352" y="98" width="14" height="8" rx="3" fill="#f59e0b" opacity="0.9"/>
-  <rect x="352" y="112" width="14" height="4" rx="2" fill="#f59e0b" opacity="0.4"/>
-  <!-- Rear -->
-  <rect x="74" y="98" width="10" height="8" rx="3" fill="#ef4444" opacity="0.8"/>
+  <path d="M178,92 Q188,64 200,56 L262,56 Q276,64 286,92 Z"
+        fill="white" opacity="0.18"/>
+  <!-- Windshield glare -->
+  <path d="M192,90 Q198,68 205,60 L230,60 Q216,68 210,90 Z"
+        fill="white" opacity="0.12"/>
+
+  <!-- Racing stripe center -->
+  <rect x="224" y="47" width="18" height="100" fill="#0a0500" opacity="0.3" rx="2"/>
+
+  <!-- Rear window -->
+  <path d="M132,94 Q142,68 158,58 L175,58 Q162,68 152,94 Z"
+        fill="white" opacity="0.1"/>
+  <!-- Front quarter window -->
+  <path d="M290,92 Q300,68 312,60 L325,60 Q314,68 304,92 Z"
+        fill="white" opacity="0.1"/>
+
+  <!-- FRONT WHEEL -->
+  <circle cx="143" cy="147" r="32" fill="#070d16"/>
+  <circle cx="143" cy="147" r="32" stroke="#f97316" stroke-width="2" opacity="0.4"/>
+  <circle cx="143" cy="147" r="24" fill="#111e2e"/>
+  <circle cx="143" cy="147" r="24" stroke="#7c8fa8" stroke-width="1" opacity="0.3"/>
+  <circle cx="143" cy="147" r="15" fill="#f97316"/>
+  <circle cx="143" cy="147" r="10" fill="#c2410c"/>
+  <circle cx="143" cy="147" r="5"  fill="#070d16"/>
+  <!-- Wheel spokes front -->
+  <line x1="143" y1="132" x2="143" y2="140" stroke="#ffaa55" stroke-width="2" opacity="0.7"/>
+  <line x1="143" y1="154" x2="143" y2="162" stroke="#ffaa55" stroke-width="2" opacity="0.7"/>
+  <line x1="128" y1="147" x2="136" y2="147" stroke="#ffaa55" stroke-width="2" opacity="0.7"/>
+  <line x1="150" y1="147" x2="158" y2="147" stroke="#ffaa55" stroke-width="2" opacity="0.7"/>
+
+  <!-- REAR WHEEL -->
+  <circle cx="318" cy="147" r="32" fill="#070d16"/>
+  <circle cx="318" cy="147" r="32" stroke="#f97316" stroke-width="2" opacity="0.4"/>
+  <circle cx="318" cy="147" r="24" fill="#111e2e"/>
+  <circle cx="318" cy="147" r="24" stroke="#7c8fa8" stroke-width="1" opacity="0.3"/>
+  <circle cx="318" cy="147" r="15" fill="#f97316"/>
+  <circle cx="318" cy="147" r="10" fill="#c2410c"/>
+  <circle cx="318" cy="147" r="5"  fill="#070d16"/>
+  <!-- Wheel spokes rear -->
+  <line x1="318" y1="132" x2="318" y2="140" stroke="#ffaa55" stroke-width="2" opacity="0.7"/>
+  <line x1="318" y1="154" x2="318" y2="162" stroke="#ffaa55" stroke-width="2" opacity="0.7"/>
+  <line x1="303" y1="147" x2="311" y2="147" stroke="#ffaa55" stroke-width="2" opacity="0.7"/>
+  <line x1="325" y1="147" x2="333" y2="147" stroke="#ffaa55" stroke-width="2" opacity="0.7"/>
+
+  <!-- HEADLIGHT (front right) -->
+  <rect x="365" y="100" width="16" height="9"  rx="3" fill="#fde68a" opacity="0.95"/>
+  <rect x="365" y="114" width="16" height="5"  rx="2" fill="#fde68a" opacity="0.5"/>
+  <!-- Headlight beam glow -->
+  <path d="M381,104 L406,95 L406,118 L381,113 Z" fill="#fde68a" opacity="0.08"/>
+
+  <!-- TAILLIGHT (rear left) -->
+  <rect x="80" y="100" width="12" height="10" rx="3" fill="#ef4444" opacity="0.9"/>
+  <rect x="80" y="114" width="12" height="5"  rx="2" fill="#ef4444" opacity="0.45"/>
+
   <!-- Exhaust pipes -->
-  <rect x="88" y="132" width="16" height="5" rx="2" fill="#374151"/>
-  <rect x="88" y="140" width="16" height="5" rx="2" fill="#374151"/>
+  <rect x="92" y="138" width="18" height="5" rx="2.5" fill="#4b5563"/>
+  <rect x="92" y="145" width="18" height="5" rx="2.5" fill="#4b5563"/>
+
+  <!-- Door line -->
+  <path d="M193,96 L193,147" stroke="#c2410c" stroke-width="1.5" opacity="0.5"/>
+  <!-- Door handle front -->
+  <rect x="170" y="118" width="16" height="4" rx="2" fill="#ffb070" opacity="0.6"/>
+  <!-- Door handle rear -->
+  <rect x="245" y="118" width="16" height="4" rx="2" fill="#ffb070" opacity="0.6"/>
+
+  <!-- Side mirror -->
+  <path d="M120,100 L108,100 L106,107 L120,107 Z" fill="#ff8533" opacity="0.8"/>
 </svg>

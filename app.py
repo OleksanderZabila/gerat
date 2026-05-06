@@ -681,6 +681,26 @@ def add_gen_service():
     return _ok(id=s.id)
 
 
+@app.route('/api/edit_general_service', methods=['POST'])
+@login_required
+def edit_gen_service():
+    data = request.get_json() or {}
+    s = _get(GeneralService, data.get('id'))
+    if not s:
+        return _err('Послугу не знайдено')
+    new_name = (data.get('name') or '').strip()
+    if new_name:
+        s.name = new_name
+    try:
+        price = int(data.get('price', -1))
+        assert price >= 0
+        s.price = price
+    except Exception:
+        return _err('Некоректна ціна')
+    db.session.commit()
+    return _ok()
+
+
 @app.route('/api/delete_general_service', methods=['POST'])
 @login_required
 def delete_gen_service():

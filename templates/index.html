@@ -393,7 +393,17 @@
         <div class="mb-3"><label class="form-label">Назва</label><input id="gn" class="form-control" placeholder="Діагностика"></div>
         <div><label class="form-label">Ціна (грн)</label><input id="gp" type="number" class="form-control" placeholder="300" min="0"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-ghost" onclick="saveGen()">Додати</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="saveGen()">Додати</button></div>
+</div></div></div>
+
+<!-- Edit general service -->
+<div class="modal fade" id="editGenModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-pencil me-2" style="color:var(--warning)"></i>Редагувати загальну послугу</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+        <div class="mb-3"><label class="form-label">Назва</label><input id="editGenName" class="form-control"></div>
+        <div><label class="form-label">Ціна (грн)</label><input id="editGenPrice" type="number" class="form-control" min="0"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn" style="background:var(--warning);color:#000;" id="editGenSaveBtn">Зберегти</button></div>
 </div></div></div>
 
 <!-- Rename -->
@@ -588,12 +598,14 @@ function closeModal(id) { _bsModals[id]?.hide(); }
 // ── TOAST ──────────────────────────────────────────────────────────────────
 function toast(msg, type = 'success') {
     const box = document.getElementById('toastBox');
-    const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill' };
     const colors = { success: 'var(--success)', error: 'var(--danger)', info: 'var(--info)' };
     const id = 't' + Date.now() + Math.random();
+    const iconHtml = type === 'error'
+        ? `<img src="/static/img/engine.svg" style="width:22px;height:16px;flex-shrink:0;filter:invert(30%) sepia(1) saturate(8) hue-rotate(320deg);" alt="">`
+        : `<i class="bi ${type==='success'?'bi-check-circle-fill':'bi-info-circle-fill'}" style="color:${colors[type]};font-size:1rem;flex-shrink:0;"></i>`;
     box.insertAdjacentHTML('beforeend',
         `<div id="${id}" class="toast-item t-${type}">
-            <i class="bi ${icons[type]||icons.info}" style="color:${colors[type]||colors.info};font-size:1rem;flex-shrink:0;"></i>
+            ${iconHtml}
             <span class="toast-msg">${msg}</span>
             <i class="bi bi-x toast-close" onclick="this.closest('.toast-item').remove()"></i>
         </div>`);
@@ -710,7 +722,8 @@ function renderGen() {
             <td class="srv-name">${escHtml(s.posluga)}</td>
             <td class="srv-price">${fmt(s.cina)}</td>
             <td class="srv-acts">
-                <button class="btn-icon" onclick="delG(${s.id})"><i class="bi bi-trash" style="color:var(--danger)"></i></button>
+                <button class="btn-icon" onclick="editGen(${s.id},'${esc(s.posluga)}',${s.cina})" title="Редагувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
+                <button class="btn-icon" onclick="delG(${s.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>
                 <button class="btn-icon" onclick="addC('${esc(s.posluga)}',${s.cina})" title="До рахунку"><i class="bi bi-plus-circle-fill" style="color:var(--success);font-size:1rem"></i></button>
             </td>
         </tr>`).join('');
@@ -856,6 +869,23 @@ async function delG(id) {
     if (!confirm(`Видалити «${s?.posluga||'послугу'}»?`)) return;
     const res = await api('/api/delete_general_service', { id });
     if (res.success) { genSrv=genSrv.filter(x=>x.id!==id); renderGen(); toast('Послугу видалено'); }
+}
+function editGen(id, name, price) {
+    document.getElementById('editGenName').value = name;
+    document.getElementById('editGenPrice').value = price;
+    openModal('editGenModal');
+    document.getElementById('editGenSaveBtn').onclick = async () => {
+        const nn = document.getElementById('editGenName').value.trim();
+        const np = parseInt(document.getElementById('editGenPrice').value);
+        if (!nn) { toast('Введіть назву','error'); return; }
+        if (isNaN(np)||np<0) { toast('Введіть ціну','error'); return; }
+        const res = await api('/api/edit_general_service', { id, name: nn, price: np });
+        if (res.success) {
+            const s = genSrv.find(x=>x.id===id);
+            if (s) { s.posluga=nn; s.cina=np; }
+            renderGen(); closeModal('editGenModal'); toast('Послугу оновлено');
+        }
+    };
 }
 
 // ── BULK IMPORT ────────────────────────────────────────────────────────────
