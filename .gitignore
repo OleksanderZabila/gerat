@@ -7,4 +7,4 @@ __pycache__/
 .claude/
 static/uploads/
 static/cache/
-!static/img/
+!static/img/make_screenshots.py
