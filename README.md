@@ -1,7 +1,7 @@
-# 🔧 СТО «Герат» — Система управління
+# 🔧 Gerat Auto Service — Management System
 
-> Веб-система для автосервісу: CRM + Магазин запчастин в одному місці.  
-> Темний інтерфейс, ролі доступу, живі лічильники, повна робота офлайн.
+> Web-based management system for auto repair shops: CRM + Parts Store in one place.  
+> Dark UI, role-based access, live dashboard stats, fully offline-capable.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776ab?style=flat&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.1-black?style=flat&logo=flask)
@@ -11,51 +11,51 @@
 
 ---
 
-## 📸 Скріншоти
+## 📸 Screenshots
 
-| Вхід | CRM — База авто |
-|------|-----------------|
+| Login | CRM — Vehicle Database |
+|-------|------------------------|
 | ![Login](docs/screenshots/login.png) | ![CRM](docs/screenshots/crm.png) |
 
-| Замовлення | Клієнти | Магазин |
-|------------|---------|---------|
+| Orders | Clients | Shop |
+|--------|---------|------|
 | ![Orders](docs/screenshots/orders.png) | ![Clients](docs/screenshots/clients.png) | ![Shop](docs/screenshots/shop.png) |
 
 ---
 
-## ✨ Можливості
+## ✨ Features
 
-### 🔐 Авторизація та ролі
-| Роль | Доступ |
+### 🔐 Auth & Roles
+| Role | Access |
 |------|--------|
-| **Адміністратор** | Повний доступ: CRM + Магазин + Керування користувачами |
-| **Механік** | Тільки CRM — авто, послуги, клієнти, замовлення |
-| **Касир** | Тільки Магазин — продажі, склад, каталог |
+| **Admin** | Full access: CRM + Shop + User management |
+| **Mechanic** | CRM only — vehicles, services, clients, orders |
+| **Cashier** | Shop only — sales, inventory, catalog |
 
-### 🚗 CRM — Автосервіс
-- База авто: Марка → Модель → Послуги, пошук в реальному часі, масовий імпорт
-- Послуги прив'язані до моделі або загальні, один клік — в рахунок
-- Клієнти: картка, історія замовлень, загальна сума витрат
-- Замовлення: список, пошук, деталі, редагування, друк рахунку
+### 🚗 CRM — Auto Repair
+- Vehicle database: Brand → Model → Services, real-time search, bulk import
+- Services attached to specific models or as general services, one click adds to invoice
+- Clients: profile card, full order history, total spending
+- Orders: list, search, details, edit, delete, print invoice
 
-### 🏪 Магазин запчастин
-- Каталог із категоріями, штрих-кодами, цінами закупки та продажу
-- Кошик з inline редагуванням кількості (клік на цифру → поле вводу)
-- Після продажу — автоматичне списання залишків зі складу
-- Склад: сортування закінчилось 🔴 / мало 🟡 / є 🟢, коригування кількості
+### 🏪 Parts Shop
+- Catalog with categories, barcodes, purchase and sale prices
+- Cart with inline quantity editing — click the number to edit it directly
+- Stock is automatically reduced after each sale
+- Inventory: sorted out-of-stock 🔴 / low 🟡 / ok 🟢, manual stock adjustments
 
-### 📊 Статистика в топбарі
-Оновлюється кожну хвилину: замовлення / виручка CRM / клієнти · продажі / виручка магазину / малий залишок
+### 📊 Live Stats in Topbar
+Updates every minute: today's orders / CRM revenue / total clients · sales / shop revenue / low-stock count
 
-### 🔫 Сканер штрих-кодів
-Інфраструктура готова й закоментована. Для активації — розкоментувати 3 рядки в `shop.html`. Підтримує USB HID сканери.
+### 🔫 Barcode Scanner
+Infrastructure is ready and commented out. To activate — uncomment 3 lines in `shop.html`. Supports USB HID scanners (detected by keystroke speed < 80ms between characters).
 
 ---
 
-## 🛠️ Стек
+## 🛠️ Tech Stack
 
-| Компонент | Технологія |
-|-----------|-----------|
+| Layer | Technology |
+|-------|-----------|
 | Backend | Python 3.10+, Flask 3.1 |
 | ORM | Flask-SQLAlchemy 3.1 / SQLAlchemy 2.0 |
 | Database | SQLite |
@@ -64,19 +64,19 @@
 
 ---
 
-## 🚀 Запуск
+## 🚀 Getting Started
 
 ```bash
 git clone https://github.com/OleksanderZabila/gerat.git
 cd gerat
-python -m venv venv && venv\Scripts\activate  # Windows
+python -m venv venv && venv\Scripts\activate   # Windows
 pip install flask flask-sqlalchemy werkzeug
 python app.py
 ```
 
-Відкрити: **http://127.0.0.1:5000** · логін `admin` / пароль `admin`
+Open in browser: **http://127.0.0.1:5000** · login `admin` / password `admin`
 
-> ⚠️ Змінити пароль після першого входу — кнопка 🔑 у правому верхньому куті
+> ⚠️ Change the default password after first login — click the 🔑 icon in the top-right corner
 
 ---
 
@@ -113,6 +113,6 @@ gerat/
 
 ---
 
-## 📄 Ліцензія
+## 📄 License
 
-Приватний проєкт. Всі права захищено © СТО «Герат»
+Private project. All rights reserved © Gerat Auto Service
