@@ -113,6 +113,3 @@ gerat/
 
 ---
 
-## 📄 License
-
-Private project. All rights reserved © Gerat Auto Service
