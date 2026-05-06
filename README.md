@@ -11,6 +11,18 @@
 
 ---
 
+## 📸 Скріншоти
+
+| Вхід | CRM — База авто |
+|------|-----------------|
+| ![Login](docs/screenshots/login.png) | ![CRM](docs/screenshots/crm.png) |
+
+| Замовлення | Клієнти | Магазин |
+|------------|---------|---------|
+| ![Orders](docs/screenshots/orders.png) | ![Clients](docs/screenshots/clients.png) | ![Shop](docs/screenshots/shop.png) |
+
+---
+
 ## ✨ Можливості
 
 ### 🔐 Авторизація та ролі
