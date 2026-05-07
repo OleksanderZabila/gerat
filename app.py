@@ -1,3 +1,4 @@
+import os
 import re
 import json
 from datetime import datetime
@@ -5,13 +6,16 @@ from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
 
-APP_VERSION = '2.4.0'
+load_dotenv()
+
+APP_VERSION = '2.4.1'
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gerat.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///gerat.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'gerat-crm-secret-2024'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-fallback-change-in-production')
 db = SQLAlchemy(app)
 
 
@@ -862,6 +866,24 @@ def _user_dict(u):
     return {'id': u.id, 'username': u.username, 'display_name': u.display_name or '', 'role': u.role}
 
 
+# ── Error handlers ────────────────────────────────────────────────────────────────────
+
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'ok': False, 'error': 'Not found'}), 404
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def server_error(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'ok': False, 'error': 'Internal server error'}), 500
+    return render_template('500.html'), 500
+
+
+# ── Entry point ───────────────────────────────────────────────────────────────────────
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
@@ -873,5 +895,5 @@ if __name__ == '__main__':
                 display_name='Адміністратор'
             ))
             db.session.commit()
-            print('>>> Створено користувача: admin / admin  (змініть пароль!)')
-    app.run(debug=True, host='0.0.0.0', port=5000)
+            print('>>> Created default user: admin / admin  (change the password!)')
+    app.run(debug=False, host='0.0.0.0', port=5000)

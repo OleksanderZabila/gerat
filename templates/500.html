@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 — Server Error</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base:#070d16; --bg-card:#0c1520;
+            --accent:#ef4444; --text:#dde8f5; --muted:#7c8fa8;
+        }
+        *,*::before,*::after{box-sizing:border-box;}
+        html,body{height:100%;margin:0;}
+        body {
+            background: var(--bg-base);
+            color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center;
+        }
+        .box { max-width: 420px; padding: 2rem; }
+        .code { font-size: 6rem; font-weight: 700; color: var(--accent); line-height: 1; }
+        h1 { font-size: 1.4rem; margin: .5rem 0 1rem; }
+        p { color: var(--muted); margin-bottom: 1.5rem; }
+        a {
+            display: inline-flex; align-items: center; gap: .4rem;
+            padding: .55rem 1.4rem; background: var(--accent); color: #fff;
+            border-radius: 8px; text-decoration: none; font-weight: 600;
+            transition: opacity .15s;
+        }
+        a:hover { opacity: .85; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="code">500</div>
+        <h1>Internal Server Error</h1>
+        <p>Something went wrong on our end. Please try again later.</p>
+        <a href="/"><i class="bi bi-arrow-left"></i> Back to Home</a>
+    </div>
+</body>
+</html>
