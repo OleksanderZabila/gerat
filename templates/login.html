@@ -245,7 +245,42 @@
                 <button type="submit" class="btn-login">
                     <i class="bi bi-box-arrow-in-right me-2"></i>Увійти в систему
                 </button>
+                <div style="text-align:center;margin-top:14px;">
+                    <button type="button" onclick="document.getElementById('forgotModal').style.display='flex'"
+                        style="background:none;border:none;color:var(--muted);font-size:.8rem;cursor:pointer;
+                               text-decoration:underline;text-underline-offset:3px;transition:color .15s;"
+                        onmouseover="this.style.color='var(--accent)'"
+                        onmouseout="this.style.color='var(--muted)'">
+                        <i class="bi bi-question-circle" style="margin-right:4px;"></i>Забув пароль
+                    </button>
+                </div>
             </form>
+
+<!-- Forgot password modal -->
+<div id="forgotModal" style="display:none;position:fixed;inset:0;z-index:999;
+     background:rgba(0,0,0,.7);align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;
+                padding:32px;max-width:360px;width:90%;text-align:center;
+                box-shadow:0 24px 60px rgba(0,0,0,.6);">
+        <div style="width:52px;height:52px;border-radius:14px;background:rgba(249,115,22,.12);
+                    display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <i class="bi bi-key-fill" style="font-size:1.5rem;color:var(--accent);"></i>
+        </div>
+        <h5 style="font-size:1rem;font-weight:700;margin:0 0 10px;">Забули пароль?</h5>
+        <p style="color:var(--muted);font-size:.83rem;line-height:1.6;margin:0 0 22px;">
+            Скиньте пароль через адміністратора системи.<br>
+            Адмін може змінити пароль у розділі<br>
+            <strong style="color:var(--text);">Налаштування → Користувачі</strong>.
+        </p>
+        <button onclick="document.getElementById('forgotModal').style.display='none'"
+            style="padding:10px 28px;background:linear-gradient(135deg,#f97316,#ea6c0a);
+                   color:#fff;border:none;border-radius:8px;font-weight:600;
+                   font-size:.88rem;cursor:pointer;transition:opacity .15s;"
+            onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            Зрозуміло
+        </button>
+    </div>
+</div>
 
             <div class="roles-hint">
                 <div class="roles-hint-title">Ролі в системі</div>
@@ -280,6 +315,10 @@
 </div>
 
 <script>
+function closeForgot() { document.getElementById('forgotModal').style.display='none'; }
+document.getElementById('forgotModal').addEventListener('click', function(e){ if(e.target===this) closeForgot(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeForgot(); });
+
 function togglePwd() {
     const i = document.getElementById('pwdInput');
     const e = document.getElementById('pwdEye');
