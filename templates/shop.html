@@ -190,6 +190,63 @@
         /* Print */
         #print-area{display:none;}
         @media print{body>*:not(#print-area){display:none!important;}#print-area{display:block!important;font-family:Arial,sans-serif;}.statusbar{display:none!important;}}
+
+        /* ════════════════════════════════════════════
+           MOBILE  (≤ 767px)
+        ════════════════════════════════════════════ */
+        @media (max-width: 767px) {
+            /* Topbar */
+            .topbar { height: auto; padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+            .topbar-right { gap: 6px; }
+            .topbar-user > span:not(.role-badge) { display: none; }
+            .mode-btn { padding: 4px 9px; font-size: .76rem; }
+
+            /* Stats wrap to second row */
+            #topbarStats {
+                order: 3; width: 100%;
+                overflow-x: auto; scrollbar-width: none; gap: 6px;
+                display: flex; padding-bottom: 2px;
+            }
+            #topbarStats::-webkit-scrollbar { display: none; }
+            .stat-pill { flex-shrink: 0; font-size: .72rem; padding: 3px 8px; }
+
+            /* Layout */
+            .main-wrap { height: auto; }
+            .main-grid { padding: 8px; gap: 8px; overflow: visible; }
+            body { overflow: auto !important; }
+
+            /* Tabs scroll */
+            .panel-head { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
+            .panel-head::-webkit-scrollbar { display: none; }
+            .tab-btn { font-size: .78rem; padding: 10px 10px; flex-shrink: 0; }
+
+            /* Bigger touch targets */
+            .cat-pill { padding: 7px 14px; font-size: .78rem; }
+            .btn { padding: 8px 14px; }
+            .btn-icon { padding: 7px 9px; }
+
+            /* Product grid — 2 columns on phone */
+            .prod-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+
+            /* Cart */
+            .cart-panel { border-radius: 10px; }
+            .cart-item-name { font-size: .82rem; }
+
+            /* Modals full screen */
+            .modal-dialog { margin: 0 !important; max-width: 100% !important; min-height: 100vh; }
+            .modal-content { border-radius: 0; min-height: 100vh; border-left: none; border-right: none; }
+            .modal-body { padding: 14px !important; }
+
+            /* Toast */
+            .toast-box { left: 10px; right: 10px; top: 10px; }
+            .toast-item { max-width: 100%; min-width: unset; }
+
+            /* Status bar */
+            .statusbar { display: none !important; }
+
+            /* Scroll areas */
+            .scroll-box { max-height: 50vh !important; }
+        }
     </style>
 </head>
 <body>
@@ -206,13 +263,15 @@
     {% endif %}
 
     <!-- Today stats -->
-    <div class="stat-pill ms-2">
-        <i class="bi bi-calendar-check" style="color:var(--success)"></i>
-        Сьогодні: <strong id="statSales">—</strong> продажів · <strong id="statRev">—</strong>
-    </div>
-    <div class="stat-pill warn-pill" id="lowStockPill" style="display:none;">
-        <img src="/static/img/engine.svg" style="width:14px;height:14px;filter:invert(1) sepia(1) saturate(5) hue-rotate(15deg);" alt="">
-        Мало: <strong id="statLow">0</strong>
+    <div id="topbarStats" style="display:flex;align-items:center;gap:6px;">
+        <div class="stat-pill">
+            <i class="bi bi-calendar-check" style="color:var(--success)"></i>
+            Сьогодні: <strong id="statSales">—</strong> продажів · <strong id="statRev">—</strong>
+        </div>
+        <div class="stat-pill warn-pill" id="lowStockPill" style="display:none;">
+            <img src="/static/img/engine.svg" style="width:14px;height:14px;filter:invert(1) sepia(1) saturate(5) hue-rotate(15deg);" alt="">
+            Мало: <strong id="statLow">0</strong>
+        </div>
     </div>
 
     <!-- Scanner indicator (hidden until activated) -->

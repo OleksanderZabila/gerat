@@ -221,6 +221,80 @@
         }
 
         .dblclick-hint { font-size: .71rem; color: var(--muted); margin-top: 4px; }
+
+        /* ════════════════════════════════════════════
+           MOBILE  (≤ 767px)
+        ════════════════════════════════════════════ */
+        @media (max-width: 767px) {
+
+            /* — Topbar — */
+            .topbar { padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+            .topbar-sub { display: none; }
+            .topbar-stats {
+                order: 3; width: 100%;
+                border-left: none; padding-left: 0;
+                overflow-x: auto; scrollbar-width: none; gap: 6px;
+            }
+            .topbar-stats::-webkit-scrollbar { display: none; }
+            .tstat { font-size: .72rem; padding: 3px 8px; flex-shrink: 0; }
+            .topbar-user > span:not(.role-badge) { display: none; }
+            .topbar-right { gap: 6px; }
+            .mode-btn { padding: 4px 9px; font-size: .76rem; }
+
+            /* — Layout — */
+            .main-grid { padding: 8px; gap: 8px; }
+            body { overflow: auto !important; }
+
+            /* — Tabs — horizontal scroll, no wrap — */
+            .panel-head {
+                overflow-x: auto; scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+                flex-wrap: nowrap;
+            }
+            .panel-head::-webkit-scrollbar { display: none; }
+            .tab-btn { font-size: .78rem; padding: 10px 10px; flex-shrink: 0; }
+            .tab-btn i { margin-right: 3px; }
+
+            /* — Cars pane: stack vertically — */
+            .tab-pane.active { flex-direction: column; }
+            #pane-cars > div:first-child { width: 100% !important; }
+            .scroll-cars { max-height: 40vh !important; }
+            .scroll-srv  { max-height: 40vh !important; }
+
+            /* — Bigger touch targets — */
+            .brand-row  { padding: 13px 12px; min-height: 46px; }
+            .model-row  { padding: 12px 12px 12px 28px; min-height: 44px; }
+            .list-row   { padding: 13px 14px; }
+            .btn-icon   { padding: 7px 9px; }
+            .btn        { padding: 7px 13px; }
+
+            /* — Action buttons always visible on touch — */
+            .action-btn { opacity: 1 !important; }
+
+            /* — Detail button (visible on mobile) — */
+            .detail-btn-mob { display: inline-flex !important; }
+
+            /* — Scroll boxes — */
+            .scroll-gen, .scroll-list { max-height: 52vh !important; }
+
+            /* — Toast full width — */
+            .toast-box  { left: 10px; right: 10px; top: 10px; }
+            .toast-item { max-width: 100%; min-width: unset; }
+
+            /* — Modals full screen — */
+            .modal-dialog { margin: 0 !important; max-width: 100% !important; min-height: 100vh; }
+            .modal-content { border-radius: 0; min-height: 100vh; border-left: none; border-right: none; }
+            .modal-body { padding: 14px !important; }
+
+            /* — Statusbar hidden — */
+            .statusbar { display: none !important; }
+
+            /* — Cart — */
+            .scroll-cart { max-height: 38vh !important; }
+        }
+
+        /* Always-invisible detail button on desktop */
+        .detail-btn-mob { display: none; }
     </style>
 </head>
 <body>
@@ -928,6 +1002,7 @@ function renderOrdersList(orders) {
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                     <span style="color:var(--accent);font-weight:700;font-size:.9rem;">${fmt(o.total)}</span>
+                    <button class="btn-icon detail-btn-mob" onclick="event.stopPropagation();showOrderDetail(${o.id})" title="Деталі"><i class="bi bi-eye" style="color:var(--info)"></i></button>
                     <button class="btn-icon action-btn" onclick="event.stopPropagation();editOrder(${o.id})" title="Редагувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
                     <button class="btn-icon action-btn" onclick="event.stopPropagation();delOrder(${o.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>
                 </div>
@@ -1064,6 +1139,7 @@ function renderClientsList(clients) {
                     <div class="list-sub">${cl.phone?`<i class="bi bi-telephone me-1"></i>${escHtml(cl.phone)}`:''} ${cl.car_info?`<i class="bi bi-car-front me-1 ms-1"></i>${escHtml(cl.car_info)}`:''}</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <button class="btn-icon detail-btn-mob" onclick="event.stopPropagation();showClientDetail(${cl.id})" title="Профіль"><i class="bi bi-eye" style="color:var(--info)"></i></button>
                     <button class="btn-icon action-btn" onclick="event.stopPropagation();editClient(${cl.id})" title="Редагувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
                     <button class="btn-icon action-btn" onclick="event.stopPropagation();delClient(${cl.id})" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>
                 </div>
