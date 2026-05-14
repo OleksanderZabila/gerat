@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('SECRET_KEY', 'test-secret-key')
 os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
 
-from app import app, db, User, Order, Sale, Product, ProductCategory
+from app import app, db, User, Order, Sale, Product, ProductCategory, Station, _run_migrations
 from werkzeug.security import generate_password_hash
 
 
@@ -37,13 +37,14 @@ def client():
     )
     with app.test_client() as c:
         with app.app_context():
-            db.create_all()
+            _run_migrations()
             if not User.query.first():
                 db.session.add(User(
                     username='admin',
                     password_hash=generate_password_hash('admin', method='pbkdf2:sha256'),
-                    role='admin',
+                    role='super',
                     display_name='Test Admin',
+                    station_id=None,
                 ))
                 db.session.commit()
         yield c

@@ -21,17 +21,28 @@ db = SQLAlchemy(app)
 
 # ── Models ──────────────────────────────────────────────────────────────────────
 
+class Station(db.Model):
+    """A tenant (auto-service business) that owns its own data island."""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    # Roles: super | admin | mechanic | cashier
+    # super has station_id = NULL and can switch between stations.
     role = db.Column(db.String(20), nullable=False, default='mechanic')
     display_name = db.Column(db.String(100))
+    station_id = db.Column(db.Integer, db.ForeignKey('station.id'), nullable=True)
 
 
 class Brand(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False)
+    station_id = db.Column(db.Integer, db.ForeignKey('station.id'), nullable=False, default=1)
     models = db.relationship('CarModel', backref='brand', lazy=True, cascade='all, delete-orphan')
 
 
@@ -53,6 +64,7 @@ class GeneralService(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Integer, nullable=False)
+    station_id = db.Column(db.Integer, db.ForeignKey('station.id'), nullable=False, default=1)
 
 
 class Client(db.Model):
@@ -62,6 +74,7 @@ class Client(db.Model):
     car_info = db.Column(db.String(300))
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    station_id = db.Column(db.Integer, db.ForeignKey('station.id'), nullable=False, default=1)
     orders = db.relationship('Order', backref='client', lazy=True, foreign_keys='Order.client_id')
 
 
@@ -74,11 +87,13 @@ class Order(db.Model):
     items = db.Column(db.Text, default='[]')
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    station_id = db.Column(db.Integer, db.ForeignKey('station.id'), nullable=False, default=1)
 
 
 class ProductCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False)
+    station_id = db.Column(db.Integer, db.ForeignKey('station.id'), nullable=False, default=1)
     products = db.relationship('Product', backref='category', lazy=True)
 
 
@@ -90,6 +105,7 @@ class Product(db.Model):
     buy_price = db.Column(db.Integer, default=0)
     quantity = db.Column(db.Integer, default=0)
     category_id = db.Column(db.Integer, db.ForeignKey('product_category.id'), nullable=True)
+    station_id = db.Column(db.Integer, db.ForeignKey('station.id'), nullable=False, default=1)
 
 
 class Sale(db.Model):
@@ -101,6 +117,7 @@ class Sale(db.Model):
     items = db.Column(db.Text, default='[]')
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    station_id = db.Column(db.Integer, db.ForeignKey('station.id'), nullable=False, default=1)
 
 
 # ── Auth ─────────────────────────────────────────────────────────────────────────
@@ -128,11 +145,124 @@ def _ok(**kw):
 
 
 def _err(msg='Помилка'):
-    return jsonify({'success': False, 'error': msg}), 400
+    resp = jsonify({'success': False, 'error': msg})
+    resp.status_code = 400
+    return resp
 
 
 def _get(model, pk):
     return db.session.get(model, pk)
+
+
+# ── Multi-tenant (Stations) ───────────────────────────────────────────────────────
+
+def _active_station_id():
+    """
+    Resolve which station the current request operates on.
+    - super:        session.active_station_id, fallback to first station
+    - admin/mech/cash: their own station_id
+    """
+    u = current_user()
+    if not u:
+        return None
+    if u.role == 'super':
+        sid = session.get('active_station_id')
+        if sid:
+            s = db.session.get(Station, sid)
+            if s:
+                return s.id
+        first = Station.query.order_by(Station.id).first()
+        return first.id if first else None
+    return u.station_id
+
+
+def _active_station():
+    sid = _active_station_id()
+    return db.session.get(Station, sid) if sid else None
+
+
+def _scoped(model):
+    """Return a query filtered to the active station."""
+    sid = _active_station_id()
+    return model.query.filter_by(station_id=sid)
+
+
+def _belongs(obj):
+    """Check that an entity belongs to the active station (defence-in-depth)."""
+    if obj is None:
+        return False
+    sid = _active_station_id()
+    obj_sid = getattr(obj, 'station_id', None)
+    # If the entity has no station_id (legacy), accept it.
+    return obj_sid is None or obj_sid == sid
+
+
+def _require_super():
+    u = current_user()
+    if not u or u.role != 'super':
+        return _err('Тільки супер-адміністратор'), 403
+    return None
+
+
+# ── Migrations ────────────────────────────────────────────────────────────────────
+
+def _run_migrations():
+    """Apply schema migrations for the multi-tenant feature on top of an
+    existing single-tenant DB. Safe to run on fresh DBs too."""
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(db.engine)
+    db.create_all()
+
+    # Add station_id to existing tables if missing
+    tenant_tables = {
+        'user':              True,   # nullable (super)
+        'brand':             False,
+        'general_service':   False,
+        'client':            False,
+        'order':             False,
+        'product_category':  False,
+        'product':           False,
+        'sale':              False,
+    }
+    for tbl, nullable in tenant_tables.items():
+        if not inspector.has_table(tbl):
+            continue
+        cols = [c['name'] for c in inspector.get_columns(tbl)]
+        if 'station_id' not in cols:
+            try:
+                if nullable:
+                    db.session.execute(text(f'ALTER TABLE "{tbl}" ADD COLUMN station_id INTEGER'))
+                else:
+                    db.session.execute(text(f'ALTER TABLE "{tbl}" ADD COLUMN station_id INTEGER NOT NULL DEFAULT 1'))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
+    # Ensure at least one station exists (Герат) so existing rows are valid.
+    if not Station.query.first():
+        db.session.add(Station(id=1, name='Герат'))
+        db.session.commit()
+
+    # Fill any NULL station_ids with the first station id.
+    first_sid = Station.query.order_by(Station.id).first().id
+    for cls in (Brand, GeneralService, Client, Order, ProductCategory, Product, Sale):
+        for row in cls.query.filter(cls.station_id.is_(None)).all():
+            row.station_id = first_sid
+    db.session.commit()
+
+    # Promote first admin to super (only if no super exists yet).
+    if not User.query.filter_by(role='super').first():
+        first_admin = User.query.filter_by(role='admin').order_by(User.id).first()
+        if first_admin:
+            first_admin.role = 'super'
+            first_admin.station_id = None
+            db.session.commit()
+
+    # Any non-super user without station_id → first station.
+    for u in User.query.filter_by(station_id=None).filter(User.role != 'super').all():
+        u.station_id = first_sid
+    db.session.commit()
 
 
 # ── Auth routes ───────────────────────────────────────────────────────────────────
@@ -168,7 +298,7 @@ def index():
     u = current_user()
     if u.role == 'cashier':
         return redirect(url_for('shop'))
-    brands = Brand.query.all()
+    brands = _scoped(Brand).all()
     db_dict = {}
     for b in brands:
         db_dict[b.name] = {}
@@ -177,9 +307,12 @@ def index():
                 {'id': s.id, 'posluga': s.name, 'cina': s.price} for s in m.services
             ]
     gs_list = [{'id': s.id, 'posluga': s.name, 'cina': s.price}
-               for s in GeneralService.query.all()]
+               for s in _scoped(GeneralService).all()]
+    station = _active_station()
+    stations = Station.query.order_by(Station.name).all() if u.role == 'super' else []
     return render_template('index.html', db_dict=db_dict, general_services=gs_list,
-                           version=APP_VERSION, user=u)
+                           version=APP_VERSION, user=u,
+                           station=station, stations=stations)
 
 
 @app.route('/shop')
@@ -188,28 +321,141 @@ def shop():
     u = current_user()
     if u.role == 'mechanic':
         return redirect(url_for('index'))
-    cats = ProductCategory.query.order_by(ProductCategory.name).all()
-    prods = Product.query.order_by(Product.name).all()
+    cats = _scoped(ProductCategory).order_by(ProductCategory.name).all()
+    prods = _scoped(Product).order_by(Product.name).all()
+    station = _active_station()
+    stations = Station.query.order_by(Station.name).all() if u.role == 'super' else []
     return render_template('shop.html',
                            categories=[{'id': c.id, 'name': c.name} for c in cats],
                            products=[_product_dict(p) for p in prods],
-                           version=APP_VERSION, user=u)
+                           version=APP_VERSION, user=u,
+                           station=station, stations=stations)
 
 
-# ── User management (admin) ───────────────────────────────────────────────────────
+# ── Stations management (super admin only) ───────────────────────────────────────
+
+@app.route('/api/stations')
+@login_required
+def stations_list():
+    """Super admin sees all stations; everyone else sees only their own."""
+    me = current_user()
+    if me.role == 'super':
+        rows = Station.query.order_by(Station.name).all()
+    elif me.station_id:
+        rows = [db.session.get(Station, me.station_id)]
+        rows = [r for r in rows if r]
+    else:
+        rows = []
+    active_id = _active_station_id()
+    return jsonify([{
+        'id': s.id, 'name': s.name,
+        'created_at': s.created_at.strftime('%d.%m.%Y') if s.created_at else '',
+        'active': s.id == active_id,
+    } for s in rows])
+
+
+@app.route('/api/stations/add', methods=['POST'])
+@login_required
+def stations_add():
+    err = _require_super()
+    if err: return err
+    name = ((request.get_json() or {}).get('name') or '').strip()
+    if not name:
+        return _err('Введіть назву СТО')
+    if Station.query.filter_by(name=name).first():
+        return _err('СТО з такою назвою вже існує')
+    s = Station(name=name)
+    db.session.add(s)
+    db.session.commit()
+    return _ok(id=s.id, name=s.name)
+
+
+@app.route('/api/stations/rename', methods=['POST'])
+@login_required
+def stations_rename():
+    err = _require_super()
+    if err: return err
+    data = request.get_json() or {}
+    s = _get(Station, data.get('id'))
+    if not s:
+        return _err('СТО не знайдено')
+    new_name = (data.get('name') or '').strip()
+    if not new_name:
+        return _err('Введіть назву')
+    other = Station.query.filter(Station.name == new_name, Station.id != s.id).first()
+    if other:
+        return _err('Така назва вже існує')
+    s.name = new_name
+    db.session.commit()
+    return _ok()
+
+
+@app.route('/api/stations/delete', methods=['POST'])
+@login_required
+def stations_delete():
+    err = _require_super()
+    if err: return err
+    s = _get(Station, (request.get_json() or {}).get('id'))
+    if not s:
+        return _err('СТО не знайдено')
+    if Station.query.count() <= 1:
+        return _err('Не можна видалити єдине СТО')
+    # Cascade-delete all owned data
+    sid = s.id
+    for cls in (Order, Client, Sale, Product, ProductCategory,
+                GeneralService, Brand):
+        cls.query.filter_by(station_id=sid).delete()
+    # Unlink users (they become orphans rather than be deleted)
+    for u in User.query.filter_by(station_id=sid).all():
+        u.station_id = None
+    db.session.delete(s)
+    db.session.commit()
+    # If the deleted station was active, switch to another one
+    if session.get('active_station_id') == sid:
+        session.pop('active_station_id', None)
+    return _ok()
+
+
+@app.route('/api/stations/switch', methods=['POST'])
+@login_required
+def stations_switch():
+    """Super admin switches the active station for the session."""
+    err = _require_super()
+    if err: return err
+    sid = (request.get_json() or {}).get('id')
+    s = _get(Station, sid)
+    if not s:
+        return _err('СТО не знайдено')
+    session['active_station_id'] = s.id
+    return _ok(id=s.id, name=s.name)
+
+
+# ── User management ───────────────────────────────────────────────────────────────
+
+def _can_manage_users(u):
+    return u and u.role in ('super', 'admin')
+
 
 @app.route('/api/users')
 @login_required
 def get_users():
-    if current_user().role != 'admin':
+    me = current_user()
+    if not _can_manage_users(me):
         return _err('Немає прав'), 403
-    return jsonify([_user_dict(u) for u in User.query.order_by(User.username)])
+    if me.role == 'super':
+        # Super sees ALL users (across all stations)
+        rows = User.query.order_by(User.username).all()
+    else:
+        # Station admin sees only their own station's users
+        rows = User.query.filter_by(station_id=me.station_id).order_by(User.username).all()
+    return jsonify([_user_dict(u) for u in rows])
 
 
 @app.route('/api/add_user', methods=['POST'])
 @login_required
 def add_user():
-    if current_user().role != 'admin':
+    me = current_user()
+    if not _can_manage_users(me):
         return _err('Немає прав'), 403
     data = request.get_json() or {}
     username = (data.get('username') or '').strip()
@@ -220,13 +466,28 @@ def add_user():
         return _err('Введіть логін')
     if len(password) < 4:
         return _err('Пароль мінімум 4 символи')
-    if role not in ('admin', 'mechanic', 'cashier'):
+    # Super can also create admins (but not other supers); station admin can't create super
+    valid_roles = ('super', 'admin', 'mechanic', 'cashier') if me.role == 'super' else ('admin', 'mechanic', 'cashier')
+    if role not in valid_roles:
         return _err('Невірна роль')
     if User.query.filter_by(username=username).first():
         return _err('Такий логін вже існує')
+
+    # Station assignment
+    if role == 'super':
+        station_id = None
+    elif me.role == 'super':
+        # Super must pick a station for the new user
+        station_id = data.get('station_id') or _active_station_id()
+        if not _get(Station, station_id):
+            return _err('Невірне СТО')
+    else:
+        # Station admin: new user inherits admin's station
+        station_id = me.station_id
+
     u = User(username=username,
              password_hash=generate_password_hash(password, method='pbkdf2:sha256'),
-             role=role, display_name=dname or None)
+             role=role, display_name=dname or None, station_id=station_id)
     db.session.add(u)
     db.session.commit()
     return _ok(user=_user_dict(u))
@@ -235,15 +496,27 @@ def add_user():
 @app.route('/api/edit_user', methods=['POST'])
 @login_required
 def edit_user_route():
-    if current_user().role != 'admin':
+    me = current_user()
+    if not _can_manage_users(me):
         return _err('Немає прав'), 403
     data = request.get_json() or {}
     u = _get(User, data.get('id'))
     if not u:
         return _err('Користувача не знайдено')
+    # Station admin can only edit users in their station
+    if me.role == 'admin' and u.station_id != me.station_id:
+        return _err('Користувач не в вашому СТО'), 403
     role = data.get('role')
-    if role and role in ('admin', 'mechanic', 'cashier'):
+    valid_roles = ('super', 'admin', 'mechanic', 'cashier') if me.role == 'super' else ('admin', 'mechanic', 'cashier')
+    if role and role in valid_roles:
         u.role = role
+        if role == 'super':
+            u.station_id = None
+    # Super can re-assign user's station
+    if me.role == 'super' and 'station_id' in data and u.role != 'super':
+        sid = data.get('station_id')
+        if sid and _get(Station, sid):
+            u.station_id = sid
     dname = (data.get('display_name') or '').strip()
     if dname:
         u.display_name = dname
@@ -260,13 +533,15 @@ def edit_user_route():
 @login_required
 def delete_user_route():
     me = current_user()
-    if me.role != 'admin':
+    if not _can_manage_users(me):
         return _err('Немає прав'), 403
     u = _get(User, (request.get_json() or {}).get('id'))
     if not u:
         return _err('Користувача не знайдено')
     if u.id == me.id:
         return _err('Не можна видалити себе')
+    if me.role == 'admin' and u.station_id != me.station_id:
+        return _err('Користувач не в вашому СТО'), 403
     db.session.delete(u)
     db.session.commit()
     return _ok()
@@ -293,12 +568,13 @@ def change_password():
 @app.route('/api/shop/add_category', methods=['POST'])
 @login_required
 def shop_add_cat():
+    sid = _active_station_id()
     name = ((request.get_json() or {}).get('name') or '').strip()
     if not name:
         return _err('Введіть назву категорії')
-    if ProductCategory.query.filter_by(name=name).first():
+    if ProductCategory.query.filter_by(name=name, station_id=sid).first():
         return _err('Така категорія вже існує')
-    c = ProductCategory(name=name)
+    c = ProductCategory(name=name, station_id=sid)
     db.session.add(c)
     db.session.commit()
     return _ok(id=c.id, name=c.name)
@@ -309,7 +585,7 @@ def shop_add_cat():
 def shop_rename_cat():
     data = request.get_json() or {}
     c = _get(ProductCategory, data.get('id'))
-    if not c:
+    if not c or not _belongs(c):
         return _err('Категорію не знайдено')
     name = (data.get('name') or '').strip()
     if not name:
@@ -322,10 +598,10 @@ def shop_rename_cat():
 @app.route('/api/shop/delete_category', methods=['POST'])
 @login_required
 def shop_del_cat():
-    if current_user().role not in ('admin',):
+    if current_user().role not in ('super', 'admin'):
         return _err('Немає прав'), 403
     c = _get(ProductCategory, (request.get_json() or {}).get('id'))
-    if not c:
+    if not c or not _belongs(c):
         return _err('Категорію не знайдено')
     Product.query.filter_by(category_id=c.id).update({'category_id': None})
     db.session.delete(c)
@@ -349,10 +625,17 @@ def shop_add_prod():
         assert sp >= 0 and bp >= 0 and qty >= 0
     except Exception:
         return _err('Некоректні значення')
+    # Validate category belongs to active station
+    cat_id = data.get('category_id') or None
+    if cat_id:
+        c = _get(ProductCategory, cat_id)
+        if not c or not _belongs(c):
+            cat_id = None
     p = Product(name=name,
                 barcode=(data.get('barcode') or '').strip() or None,
                 sell_price=sp, buy_price=bp, quantity=qty,
-                category_id=data.get('category_id') or None)
+                category_id=cat_id,
+                station_id=_active_station_id())
     db.session.add(p)
     db.session.commit()
     return _ok(product=_product_dict(p))
@@ -363,7 +646,7 @@ def shop_add_prod():
 def shop_edit_prod():
     data = request.get_json() or {}
     p = _get(Product, data.get('id'))
-    if not p:
+    if not p or not _belongs(p):
         return _err('Товар не знайдено')
     name = (data.get('name') or '').strip()
     if name:
@@ -388,10 +671,10 @@ def shop_edit_prod():
 @app.route('/api/shop/delete_product', methods=['POST'])
 @login_required
 def shop_del_prod():
-    if current_user().role not in ('admin',):
+    if current_user().role not in ('super', 'admin'):
         return _err('Тільки адміністратор може видаляти товари'), 403
     p = _get(Product, (request.get_json() or {}).get('id'))
-    if not p:
+    if not p or not _belongs(p):
         return _err('Товар не знайдено')
     db.session.delete(p)
     db.session.commit()
@@ -403,7 +686,7 @@ def shop_del_prod():
 def shop_adjust_stock():
     data = request.get_json() or {}
     p = _get(Product, data.get('id'))
-    if not p:
+    if not p or not _belongs(p):
         return _err('Товар не знайдено')
     try:
         delta = int(data.get('delta', 0))
@@ -419,13 +702,14 @@ def shop_adjust_stock():
 @app.route('/api/shop/sales')
 @login_required
 def shop_get_sales():
-    return jsonify([_sale_dict(s) for s in Sale.query.order_by(Sale.created_at.desc()).limit(200)])
+    return jsonify([_sale_dict(s) for s in _scoped(Sale).order_by(Sale.created_at.desc()).limit(200)])
 
 
 @app.route('/api/shop/save_sale', methods=['POST'])
 @login_required
 def shop_save_sale():
     u = current_user()
+    sid = _active_station_id()
     data = request.get_json() or {}
     items_raw = data.get('items', '[]')
     total = int(data.get('total') or 0)
@@ -438,7 +722,7 @@ def shop_save_sale():
         qty = int(item.get('qty', 1))
         if pid:
             p = _get(Product, pid)
-            if p:
+            if p and _belongs(p):
                 p.quantity = max(0, p.quantity - qty)
     items_str = json.dumps(items_list, ensure_ascii=False)
     s = Sale(cashier_id=u.id,
@@ -446,7 +730,8 @@ def shop_save_sale():
              client_name=(data.get('client_name') or '').strip() or None,
              total=total,
              items=items_str,
-             notes=(data.get('notes') or '').strip() or None)
+             notes=(data.get('notes') or '').strip() or None,
+             station_id=sid)
     db.session.add(s)
     db.session.commit()
     return _ok(id=s.id)
@@ -455,10 +740,10 @@ def shop_save_sale():
 @app.route('/api/shop/delete_sale', methods=['POST'])
 @login_required
 def shop_del_sale():
-    if current_user().role != 'admin':
+    if current_user().role not in ('super', 'admin'):
         return _err('Тільки адміністратор може видаляти продажі'), 403
     s = _get(Sale, (request.get_json() or {}).get('id'))
-    if not s:
+    if not s or not _belongs(s):
         return _err('Продаж не знайдено')
     db.session.delete(s)
     db.session.commit()
@@ -471,13 +756,14 @@ def shop_del_sale():
 @login_required
 def get_stats():
     today_start = datetime.combine(_date.today(), datetime.min.time())
-    crm_revenue  = db.session.query(db.func.sum(Order.total)).filter(Order.created_at >= today_start).scalar() or 0
-    crm_orders   = Order.query.filter(Order.created_at >= today_start).count()
-    shop_revenue = db.session.query(db.func.sum(Sale.total)).filter(Sale.created_at >= today_start).scalar() or 0
-    shop_sales   = Sale.query.filter(Sale.created_at >= today_start).count()
-    low_stock    = Product.query.filter(Product.quantity <= 3).count()
-    out_of_stock = Product.query.filter(Product.quantity == 0).count()
-    total_clients = Client.query.count()
+    sid = _active_station_id()
+    crm_revenue  = db.session.query(db.func.sum(Order.total)).filter(Order.created_at >= today_start, Order.station_id == sid).scalar() or 0
+    crm_orders   = Order.query.filter(Order.created_at >= today_start, Order.station_id == sid).count()
+    shop_revenue = db.session.query(db.func.sum(Sale.total)).filter(Sale.created_at >= today_start, Sale.station_id == sid).scalar() or 0
+    shop_sales   = Sale.query.filter(Sale.created_at >= today_start, Sale.station_id == sid).count()
+    low_stock    = Product.query.filter(Product.quantity <= 3, Product.station_id == sid).count()
+    out_of_stock = Product.query.filter(Product.quantity == 0, Product.station_id == sid).count()
+    total_clients = Client.query.filter(Client.station_id == sid).count()
     return jsonify({
         'crm_revenue': int(crm_revenue),
         'crm_orders': crm_orders,
@@ -557,10 +843,10 @@ def analytics_crm():
     """Daily analytics for CRM (orders) over the requested date range."""
     period_start, period_end, days, prev_start, prev_end, end_date = _parse_range()
 
-    orders = Order.query.filter(Order.created_at >= period_start,
-                                Order.created_at < period_end).all()
-    prev_orders = Order.query.filter(Order.created_at >= prev_start,
-                                     Order.created_at < prev_end).all()
+    orders = _scoped(Order).filter(Order.created_at >= period_start,
+                                   Order.created_at < period_end).all()
+    prev_orders = _scoped(Order).filter(Order.created_at >= prev_start,
+                                        Order.created_at < prev_end).all()
 
     total_orders  = len(orders)
     total_revenue = sum(int(o.total or 0) for o in orders)
@@ -623,10 +909,10 @@ def analytics_shop():
     """Daily analytics for the shop (sales) over the requested date range."""
     period_start, period_end, days, prev_start, prev_end, end_date = _parse_range()
 
-    sales = Sale.query.filter(Sale.created_at >= period_start,
-                              Sale.created_at < period_end).all()
-    prev_sales = Sale.query.filter(Sale.created_at >= prev_start,
-                                   Sale.created_at < prev_end).all()
+    sales = _scoped(Sale).filter(Sale.created_at >= period_start,
+                                 Sale.created_at < period_end).all()
+    prev_sales = _scoped(Sale).filter(Sale.created_at >= prev_start,
+                                      Sale.created_at < prev_end).all()
 
     total_sales   = len(sales)
     total_revenue = sum(int(s.total or 0) for s in sales)
@@ -639,7 +925,7 @@ def analytics_shop():
 
     # Profit estimate: revenue - cost of goods sold
     # We look up products by id to get buy_price.
-    prod_buy = {p.id: int(p.buy_price or 0) for p in Product.query.all()}
+    prod_buy = {p.id: int(p.buy_price or 0) for p in _scoped(Product).all()}
     total_profit = 0
     prod_qty  = {}   # product_id -> total qty sold
     prod_rev  = {}   # product_id -> total revenue
@@ -679,12 +965,13 @@ def analytics_shop():
         key=lambda x: -x['revenue']
     )[:8]
 
-    # Inventory snapshot
-    out_of_stock = Product.query.filter(Product.quantity == 0).count()
-    low_stock    = Product.query.filter(Product.quantity > 0, Product.quantity <= 3).count()
+    # Inventory snapshot (scoped to station)
+    sid = _active_station_id()
+    out_of_stock = Product.query.filter_by(station_id=sid).filter(Product.quantity == 0).count()
+    low_stock    = Product.query.filter_by(station_id=sid).filter(Product.quantity > 0, Product.quantity <= 3).count()
     inventory_value = db.session.query(
         db.func.sum(Product.sell_price * Product.quantity)
-    ).scalar() or 0
+    ).filter(Product.station_id == sid).scalar() or 0
 
     return jsonify({
         'period_days':     days,
@@ -709,7 +996,7 @@ def analytics_shop():
 @app.route('/api/get_data')
 @login_required
 def get_data():
-    brands = Brand.query.all()
+    brands = _scoped(Brand).all()
     db_dict = {}
     for b in brands:
         db_dict[b.name] = {}
@@ -718,7 +1005,7 @@ def get_data():
                 {'id': s.id, 'posluga': s.name, 'cina': s.price} for s in m.services
             ]
     gs_list = [{'id': s.id, 'posluga': s.name, 'cina': s.price}
-               for s in GeneralService.query.all()]
+               for s in _scoped(GeneralService).all()]
     return jsonify({'db_dict': db_dict, 'general_services': gs_list})
 
 
@@ -730,8 +1017,10 @@ def add_car():
     m_name = (data.get('model') or '').strip()
     if not b_name:
         return _err('Введіть назву марки')
-    brand = Brand.query.filter_by(name=b_name).first() or Brand(name=b_name)
-    if not brand.id:
+    sid = _active_station_id()
+    brand = Brand.query.filter_by(name=b_name, station_id=sid).first()
+    if not brand:
+        brand = Brand(name=b_name, station_id=sid)
         db.session.add(brand)
         db.session.flush()
     if m_name and not CarModel.query.filter_by(name=m_name, brand_id=brand.id).first():
@@ -747,10 +1036,11 @@ def rename_brand():
     new = (data.get('new_name') or '').strip()
     if not new:
         return _err('Нова назва порожня')
-    brand = Brand.query.filter_by(name=data.get('old_name')).first()
+    sid = _active_station_id()
+    brand = Brand.query.filter_by(name=data.get('old_name'), station_id=sid).first()
     if not brand:
         return _err('Марку не знайдено')
-    if Brand.query.filter_by(name=new).first():
+    if Brand.query.filter_by(name=new, station_id=sid).first():
         return _err('Така марка вже існує')
     brand.name = new
     db.session.commit()
@@ -764,7 +1054,8 @@ def rename_model():
     new = (data.get('new_name') or '').strip()
     if not new:
         return _err('Нова назва порожня')
-    brand = Brand.query.filter_by(name=data.get('brand')).first()
+    sid = _active_station_id()
+    brand = Brand.query.filter_by(name=data.get('brand'), station_id=sid).first()
     if not brand:
         return _err('Марку не знайдено')
     model = CarModel.query.filter_by(name=data.get('old_name'), brand_id=brand.id).first()
@@ -778,7 +1069,8 @@ def rename_model():
 @app.route('/api/delete_brand', methods=['POST'])
 @login_required
 def delete_brand():
-    brand = Brand.query.filter_by(name=(request.get_json() or {}).get('name')).first()
+    sid = _active_station_id()
+    brand = Brand.query.filter_by(name=(request.get_json() or {}).get('name'), station_id=sid).first()
     if not brand:
         return _err('Марку не знайдено')
     db.session.delete(brand)
@@ -790,7 +1082,8 @@ def delete_brand():
 @login_required
 def delete_model():
     data = request.get_json() or {}
-    brand = Brand.query.filter_by(name=data.get('brand')).first()
+    sid = _active_station_id()
+    brand = Brand.query.filter_by(name=data.get('brand'), station_id=sid).first()
     if not brand:
         return _err('Марку не знайдено')
     model = CarModel.query.filter_by(name=data.get('model'), brand_id=brand.id).first()
@@ -805,13 +1098,14 @@ def delete_model():
 @login_required
 def bulk_import():
     text = (request.get_json() or {}).get('text', '')
+    sid = _active_station_id()
     matches = re.findall(r'"([^"]+)"\s*\{([^}]+)\}\s*\[([^\]]+)\]\s*\|\s*(\d+)\s*\|', text)
     added = 0
     for b_raw, m_raw, s_raw, price in matches:
         b_name, m_name, s_name = b_raw.strip(), m_raw.strip(), s_raw.strip()
-        brand = Brand.query.filter_by(name=b_name).first()
+        brand = Brand.query.filter_by(name=b_name, station_id=sid).first()
         if not brand:
-            brand = Brand(name=b_name)
+            brand = Brand(name=b_name, station_id=sid)
             db.session.add(brand)
             db.session.flush()
         model = CarModel.query.filter_by(name=m_name, brand_id=brand.id).first()
@@ -838,7 +1132,8 @@ def add_service():
         assert price >= 0
     except Exception:
         return _err('Некоректна ціна')
-    brand = Brand.query.filter_by(name=data.get('brand')).first()
+    sid = _active_station_id()
+    brand = Brand.query.filter_by(name=data.get('brand'), station_id=sid).first()
     if not brand:
         return _err('Марку не знайдено')
     model = CarModel.query.filter_by(name=data.get('model'), brand_id=brand.id).first()
@@ -893,7 +1188,7 @@ def add_gen_service():
         assert price >= 0
     except Exception:
         return _err('Некоректна ціна')
-    s = GeneralService(name=name, price=price)
+    s = GeneralService(name=name, price=price, station_id=_active_station_id())
     db.session.add(s)
     db.session.commit()
     return _ok(id=s.id)
@@ -904,7 +1199,7 @@ def add_gen_service():
 def edit_gen_service():
     data = request.get_json() or {}
     s = _get(GeneralService, data.get('id'))
-    if not s:
+    if not s or not _belongs(s):
         return _err('Послугу не знайдено')
     new_name = (data.get('name') or '').strip()
     if new_name:
@@ -923,7 +1218,7 @@ def edit_gen_service():
 @login_required
 def delete_gen_service():
     s = _get(GeneralService, (request.get_json() or {}).get('id'))
-    if not s:
+    if not s or not _belongs(s):
         return _err('Послугу не знайдено')
     db.session.delete(s)
     db.session.commit()
@@ -934,25 +1229,27 @@ def delete_gen_service():
 @login_required
 def get_orders():
     return jsonify([_order_dict(o)
-                    for o in Order.query.order_by(Order.created_at.desc()).limit(200)])
+                    for o in _scoped(Order).order_by(Order.created_at.desc()).limit(200)])
 
 
 @app.route('/api/save_order', methods=['POST'])
 @login_required
 def save_order():
     data = request.get_json() or {}
+    sid = _active_station_id()
     client_id = data.get('client_id') or None
     client_name = (data.get('client_name') or '').strip() or None
     car_info = (data.get('car_info') or '').strip() or None
     if not client_id and client_name:
-        cl = Client.query.filter(Client.name.ilike(client_name)).first()
+        cl = Client.query.filter(Client.name.ilike(client_name), Client.station_id == sid).first()
         if cl:
             client_id = cl.id
             if not car_info:
                 car_info = cl.car_info
     o = Order(client_id=client_id, client_name=client_name, car_info=car_info,
               total=int(data.get('total') or 0), items=data.get('items') or '[]',
-              notes=(data.get('notes') or '').strip() or None)
+              notes=(data.get('notes') or '').strip() or None,
+              station_id=sid)
     db.session.add(o)
     db.session.commit()
     return _ok(id=o.id)
@@ -963,7 +1260,7 @@ def save_order():
 def edit_order():
     data = request.get_json() or {}
     o = _get(Order, data.get('id'))
-    if not o:
+    if not o or not _belongs(o):
         return _err('Замовлення не знайдено')
     new_name = (data.get('client_name') or '').strip()
     if new_name:
@@ -978,7 +1275,7 @@ def edit_order():
 @login_required
 def delete_order():
     o = _get(Order, (request.get_json() or {}).get('id'))
-    if not o:
+    if not o or not _belongs(o):
         return _err('Замовлення не знайдено')
     db.session.delete(o)
     db.session.commit()
@@ -988,18 +1285,18 @@ def delete_order():
 @app.route('/api/clients')
 @login_required
 def get_clients():
-    return jsonify([_client_dict(c) for c in Client.query.order_by(Client.name)])
+    return jsonify([_client_dict(c) for c in _scoped(Client).order_by(Client.name)])
 
 
 @app.route('/api/client/<int:cid>')
 @login_required
 def get_client(cid):
     c = _get(Client, cid)
-    if not c:
+    if not c or not _belongs(c):
         return _err('Клієнта не знайдено'), 404
     data = _client_dict(c)
     data['orders'] = [_order_dict(o) for o in
-                      Order.query.filter(Order.client_id == cid).order_by(Order.created_at.desc())]
+                      _scoped(Order).filter(Order.client_id == cid).order_by(Order.created_at.desc())]
     return jsonify(data)
 
 
@@ -1013,7 +1310,8 @@ def add_client():
     cl = Client(name=name,
                 phone=(data.get('phone') or '').strip() or None,
                 car_info=(data.get('car_info') or '').strip() or None,
-                notes=(data.get('notes') or '').strip() or None)
+                notes=(data.get('notes') or '').strip() or None,
+                station_id=_active_station_id())
     db.session.add(cl)
     db.session.commit()
     return _ok(id=cl.id)
@@ -1024,7 +1322,7 @@ def add_client():
 def edit_client():
     data = request.get_json() or {}
     cl = _get(Client, data.get('id'))
-    if not cl:
+    if not cl or not _belongs(cl):
         return _err('Клієнта не знайдено')
     new_name = (data.get('name') or '').strip()
     if new_name:
@@ -1040,7 +1338,7 @@ def edit_client():
 @login_required
 def delete_client():
     cl = _get(Client, (request.get_json() or {}).get('id'))
-    if not cl:
+    if not cl or not _belongs(cl):
         return _err('Клієнта не знайдено')
     db.session.delete(cl)
     db.session.commit()
@@ -1077,7 +1375,13 @@ def _sale_dict(s):
 
 
 def _user_dict(u):
-    return {'id': u.id, 'username': u.username, 'display_name': u.display_name or '', 'role': u.role}
+    st = db.session.get(Station, u.station_id) if u.station_id else None
+    return {
+        'id': u.id, 'username': u.username,
+        'display_name': u.display_name or '', 'role': u.role,
+        'station_id': u.station_id,
+        'station_name': st.name if st else '',
+    }
 
 
 # ── Error handlers ────────────────────────────────────────────────────────────────────
@@ -1100,12 +1404,12 @@ def server_error(e):
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        _run_migrations()
         if not User.query.first():
             db.session.add(User(
                 username='admin',
                 password_hash=generate_password_hash('admin', method='pbkdf2:sha256'),
-                role='admin',
+                role='super',
                 display_name='Адміністратор'
             ))
             db.session.commit()

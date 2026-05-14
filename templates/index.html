@@ -223,6 +223,26 @@
 
         .dblclick-hint { font-size: .71rem; color: var(--muted); margin-top: 4px; }
 
+        /* ── Station switcher ── */
+        .station-switcher { position:relative; }
+        .station-pill { display:flex; align-items:center; gap:6px; padding:5px 11px;
+            background:linear-gradient(135deg,rgba(96,165,250,.18),rgba(96,165,250,.06));
+            border:1px solid rgba(96,165,250,.35); border-radius:8px;
+            color:var(--text); font-size:.8rem; font-weight:600; cursor:pointer; transition:background .12s; white-space:nowrap; }
+        .station-pill:hover { background:linear-gradient(135deg,rgba(96,165,250,.28),rgba(96,165,250,.1)); }
+        .station-pill i.bi-building { color:var(--info); }
+        .station-pill i.bi-chevron-down { font-size:.7rem; color:var(--muted); margin-left:2px; }
+        .station-dropdown { display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:220px;
+            background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:5px;
+            box-shadow:0 12px 32px rgba(0,0,0,.45); z-index:1000; }
+        .station-dropdown.open { display:block; }
+        .station-opt { display:flex; align-items:center; gap:8px; padding:8px 11px; border-radius:6px;
+            color:var(--text); text-decoration:none; font-size:.82rem; transition:background .12s; }
+        .station-opt:hover { background:var(--bg-hover); color:var(--text); }
+        .station-opt.active { background:var(--accent-dim); color:var(--accent); font-weight:600; }
+        .station-opt i { font-size:.9rem; flex-shrink:0; }
+        .station-sep { height:1px; background:var(--border); margin:4px 0; }
+
         /* ── Analytics ── */
         .analytics-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
         .period-pills { display:flex; gap:4px; background:var(--bg-item); border:1px solid var(--border); border-radius:7px; padding:3px; flex-wrap:wrap; }
@@ -349,8 +369,27 @@
 <div class="toast-box" id="toastBox"></div>
 
 <div class="topbar">
-    <a class="topbar-logo" href="/"><i class="bi bi-tools"></i> СТО «Герат»</a>
-    {% if user.role == 'admin' %}
+    <a class="topbar-logo" href="/"><i class="bi bi-tools"></i> СТО «{{ station.name if station else '—' }}»</a>
+    {% if user.role == 'super' %}
+    <div class="station-switcher">
+        <button class="station-pill" id="stationPillBtn" type="button">
+            <i class="bi bi-building"></i>
+            <span>{{ station.name if station else 'Оберіть СТО' }}</span>
+            <i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="station-dropdown" id="stationDropdown">
+            {% for s in stations %}
+            <a class="station-opt {% if station and s.id == station.id %}active{% endif %}" href="#" data-id="{{ s.id }}">
+                <i class="bi bi-building"></i>{{ s.name }}
+                {% if station and s.id == station.id %}<i class="bi bi-check2-circle ms-auto"></i>{% endif %}
+            </a>
+            {% endfor %}
+            <div class="station-sep"></div>
+            <a class="station-opt" href="#" onclick="event.preventDefault();openModal('stationsModal');"><i class="bi bi-gear"></i>Управління СТО</a>
+        </div>
+    </div>
+    {% endif %}
+    {% if user.role in ('super','admin') %}
     <div class="mode-switcher">
         <a href="/" class="mode-btn active"><i class="bi bi-car-front"></i> CRM</a>
         <a href="/shop" class="mode-btn"><i class="bi bi-shop"></i> Магазин</a>
@@ -365,10 +404,13 @@
         <div class="topbar-user">
             <i class="bi bi-person-circle" style="color:var(--muted);font-size:1.1rem;"></i>
             <span>{{ user.display_name or user.username }}</span>
-            <span class="role-badge role-{{ user.role }}">{{ {'admin':'Адмін','mechanic':'Механік','cashier':'Касир'}[user.role] }}</span>
+            <span class="role-badge role-{{ 'admin' if user.role == 'super' else user.role }}">{{ {'super':'Супер','admin':'Адмін','mechanic':'Механік','cashier':'Касир'}[user.role] }}</span>
         </div>
-        {% if user.role == 'admin' %}
+        {% if user.role in ('super','admin') %}
         <button class="btn-icon" onclick="openModal('usersModal')" title="Користувачі"><i class="bi bi-people" style="color:var(--accent)"></i></button>
+        {% endif %}
+        {% if user.role == 'super' %}
+        <button class="btn-icon" onclick="openModal('stationsModal')" title="СТО"><i class="bi bi-building" style="color:var(--info)"></i></button>
         {% endif %}
         <button class="btn-icon" onclick="openModal('changePwdModal')" title="Змінити пароль"><i class="bi bi-key" style="color:var(--muted)"></i></button>
         <a href="/logout" class="btn-icon" title="Вийти"><i class="bi bi-box-arrow-right" style="color:var(--danger)"></i></a>
@@ -694,9 +736,19 @@
             <select id="auRole" class="form-select">
                 <option value="mechanic">Механік — тільки CRM</option>
                 <option value="cashier">Касир — тільки Магазин</option>
-                <option value="admin">Адміністратор — повний доступ</option>
+                <option value="admin">Адміністратор — повний доступ в СТО</option>
+                {% if user.role == 'super' %}
+                <option value="super">Супер-адмін — управління всіма СТО</option>
+                {% endif %}
             </select>
         </div>
+        {% if user.role == 'super' %}
+        <div class="mb-2" id="auStationWrap"><label class="form-label">СТО</label>
+            <select id="auStation" class="form-select">
+                {% for s in stations %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+            </select>
+        </div>
+        {% endif %}
         <div><label class="form-label">Пароль *</label><input id="auPwd" type="password" class="form-control" placeholder="мін. 4 символи"></div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn btn-accent" onclick="addUser()">Створити</button></div>
@@ -712,12 +764,42 @@
                 <option value="mechanic">Механік</option>
                 <option value="cashier">Касир</option>
                 <option value="admin">Адміністратор</option>
+                {% if user.role == 'super' %}<option value="super">Супер-адмін</option>{% endif %}
             </select>
         </div>
+        {% if user.role == 'super' %}
+        <div class="mb-2" id="euStationWrap"><label class="form-label">СТО</label>
+            <select id="euStation" class="form-select">
+                {% for s in stations %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+            </select>
+        </div>
+        {% endif %}
         <div><label class="form-label">Новий пароль <span style="color:var(--muted)">(порожньо — не змінювати)</span></label><input id="euPwd" type="password" class="form-control" placeholder="новий пароль..."></div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Скасувати</button><button class="btn" style="background:var(--warning);color:#000;" id="editUserSaveBtn">Зберегти</button></div>
 </div></div></div>
+
+{% if user.role == 'super' %}
+<!-- Stations management -->
+<div class="modal fade" id="stationsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-building me-2" style="color:var(--info)"></i>Управління СТО</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body p-3">
+        <div class="d-flex gap-2 mb-3">
+            <input id="newStationName" class="form-control" placeholder="Назва нового СТО (напр. «Тесті»)">
+            <button class="btn btn-accent" onclick="addStation()"><i class="bi bi-plus-lg me-1"></i>Додати</button>
+        </div>
+        <div id="stationsList"></div>
+        <div style="margin-top:14px; padding:10px 12px; background:var(--bg-item); border:1px solid var(--border); border-radius:8px; font-size:.8rem; color:var(--muted);">
+            <i class="bi bi-info-circle me-1" style="color:var(--info)"></i>
+            Активне СТО — це те, дані якого зараз відображаються. Перемкнутися можна через випадайку зверху.
+        </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" data-bs-dismiss="modal">Закрити</button></div>
+</div></div></div>
+{% endif %}
 
 <!-- Change password -->
 <div class="modal fade" id="changePwdModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
@@ -733,7 +815,7 @@
 <div id="print-area">
     <div style="max-width:560px;margin:0 auto;padding:24px;font-family:Arial,sans-serif;">
         <div style="text-align:center;border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:18px;">
-            <div style="font-size:22px;font-weight:700;">СТО «Герат»</div>
+            <div style="font-size:22px;font-weight:700;">СТО «{{ station.name if station else '' }}»</div>
             <div style="color:#666;font-size:13px;margin-top:4px;">Рахунок на оплату послуг</div>
             <div style="color:#999;font-size:12px;margin-top:4px;" id="printDate"></div>
         </div>
@@ -748,12 +830,12 @@
                 <td style="text-align:right;padding:9px 12px;border:1px solid #ddd;" id="printTotal"></td>
             </tr></tfoot>
         </table>
-        <div style="text-align:center;color:#aaa;font-size:12px;">Дякуємо за довіру! • СТО «Герат»</div>
+        <div style="text-align:center;color:#aaa;font-size:12px;">Дякуємо за довіру! • СТО «{{ station.name if station else '' }}»</div>
     </div>
 </div>
 
 <div class="statusbar">
-    <span>СТО «Герат»<span class="statusbar-dot"> · </span>CRM-система</span>
+    <span>СТО «{{ station.name if station else '—' }}»<span class="statusbar-dot"> · </span>CRM-система</span>
     <span id="sbTime" style="color:var(--muted);"></span>
     <span><span class="statusbar-dot">v</span><span class="statusbar-ver">{{ version }}</span></span>
 </div>
@@ -1541,14 +1623,14 @@ async function loadUsers() {
     try { allUsers = await (await fetch('/api/users')).json(); renderUsers(); } catch {}
 }
 function renderUsers() {
-    const RL = { admin:'Адмін', mechanic:'Механік', cashier:'Касир' };
-    const RC = { admin:'role-admin', mechanic:'role-mechanic', cashier:'role-cashier' };
+    const RL = { super:'Супер-адмін', admin:'Адмін', mechanic:'Механік', cashier:'Касир' };
+    const RC = { super:'role-admin', admin:'role-admin', mechanic:'role-mechanic', cashier:'role-cashier' };
     document.getElementById('usersList').innerHTML = allUsers.length
         ? `<table style="width:100%;border-collapse:collapse;">${allUsers.map(u => `
             <tr style="border-bottom:1px solid var(--border);">
                 <td style="padding:10px 8px;">
                     <div style="font-weight:600;font-size:.87rem;">${escHtml(u.display_name||u.username)}</div>
-                    <div style="color:var(--muted);font-size:.76rem;">@${escHtml(u.username)}</div>
+                    <div style="color:var(--muted);font-size:.76rem;">@${escHtml(u.username)}${u.station_name ? ' · <i class="bi bi-building me-1"></i>' + escHtml(u.station_name) : ''}</div>
                 </td>
                 <td style="padding:10px 8px;"><span class="role-badge ${RC[u.role]||''}">${RL[u.role]||u.role}</span></td>
                 <td style="padding:10px 8px;text-align:right;white-space:nowrap;">
@@ -1559,12 +1641,15 @@ function renderUsers() {
         : '<div class="empty"><i class="bi bi-people"></i><p>Немає користувачів</p></div>';
 }
 async function addUser() {
-    const res = await api('/api/add_user', {
+    const body = {
         username: document.getElementById('auLogin').value,
         display_name: document.getElementById('auName').value,
         role: document.getElementById('auRole').value,
         password: document.getElementById('auPwd').value,
-    });
+    };
+    const auSt = document.getElementById('auStation');
+    if (auSt) body.station_id = parseInt(auSt.value);
+    const res = await api('/api/add_user', body);
     if (res.success) {
         ['auLogin','auName','auPwd'].forEach(i => document.getElementById(i).value = '');
         closeModal('addUserModal'); await loadUsers(); toast('Користувача створено');
@@ -1576,17 +1661,111 @@ function openEditUser(id) {
     document.getElementById('euName').value = u.display_name;
     document.getElementById('euRole').value = u.role;
     document.getElementById('euPwd').value = '';
+    const euSt = document.getElementById('euStation');
+    if (euSt && u.station_id) euSt.value = u.station_id;
     openModal('editUserModal');
     document.getElementById('editUserSaveBtn').onclick = async () => {
-        const res = await api('/api/edit_user', {
+        const body = {
             id,
             display_name: document.getElementById('euName').value,
             role: document.getElementById('euRole').value,
             password: document.getElementById('euPwd').value || undefined,
-        });
+        };
+        const euSt2 = document.getElementById('euStation');
+        if (euSt2) body.station_id = parseInt(euSt2.value);
+        const res = await api('/api/edit_user', body);
         if (res.success) { closeModal('editUserModal'); await loadUsers(); toast('Оновлено'); }
     };
 }
+
+// ── STATIONS (super admin) ───────────────────────────────────────────────────
+async function loadStations() {
+    try {
+        const r = await fetch('/api/stations');
+        if (!r.ok) return;
+        const list = await r.json();
+        const c = document.getElementById('stationsList');
+        if (!c) return;
+        if (!list.length) { c.innerHTML = '<div class="empty"><p>СТО ще не створено</p></div>'; return; }
+        c.innerHTML = list.map(s => `
+            <div class="list-row" style="display:flex;align-items:center;gap:10px;">
+                <div style="flex:1;">
+                    <div class="list-name">
+                        <i class="bi bi-building me-2" style="color:var(--info)"></i>${escHtml(s.name)}
+                        ${s.active ? '<span class="tag tag-accent" style="margin-left:8px;">активне</span>' : ''}
+                    </div>
+                    <div class="list-sub">створено ${s.created_at}</div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    ${s.active ? '' : `<button class="btn btn-ghost btn-sm" onclick="switchStation(${s.id})" title="Перейти"><i class="bi bi-box-arrow-in-right"></i></button>`}
+                    <button class="btn btn-ghost btn-sm" onclick="renameStation(${s.id}, '${esc(s.name).replace(/'/g,"\\'")}')" title="Перейменувати"><i class="bi bi-pencil-square" style="color:var(--warning)"></i></button>
+                    <button class="btn btn-ghost btn-sm" onclick="deleteStation(${s.id}, '${esc(s.name).replace(/'/g,"\\'")}')" title="Видалити"><i class="bi bi-trash" style="color:var(--danger)"></i></button>
+                </div>
+            </div>`).join('');
+    } catch (e) { toast('Помилка завантаження СТО', 'error'); }
+}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+async function addStation() {
+    const name = document.getElementById('newStationName').value.trim();
+    if (!name) { toast('Введіть назву', 'warn'); return; }
+    const res = await api('/api/stations/add', { name });
+    if (res.success) {
+        document.getElementById('newStationName').value = '';
+        toast('СТО створено — перезавантажте, щоб побачити в списку');
+        await loadStations();
+        setTimeout(() => location.reload(), 800);
+    }
+}
+async function renameStation(id, oldName) {
+    const name = prompt('Нова назва СТО:', oldName);
+    if (!name || name === oldName) return;
+    const res = await api('/api/stations/rename', { id, name });
+    if (res.success) { toast('Перейменовано'); await loadStations(); setTimeout(() => location.reload(), 600); }
+}
+async function deleteStation(id, name) {
+    if (!confirm(`Видалити СТО «${name}» РАЗОМ з усіма його даними? Це незворотно.`)) return;
+    const res = await api('/api/stations/delete', { id });
+    if (res.success) { toast('СТО видалено'); await loadStations(); setTimeout(() => location.reload(), 600); }
+}
+async function switchStation(id) {
+    const res = await api('/api/stations/switch', { id });
+    if (res.success) location.reload();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Station dropdown toggle
+    const btn = document.getElementById('stationPillBtn');
+    const dd  = document.getElementById('stationDropdown');
+    if (btn && dd) {
+        btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('open'); });
+        document.addEventListener('click', () => dd.classList.remove('open'));
+        dd.addEventListener('click', e => e.stopPropagation());
+        dd.querySelectorAll('.station-opt[data-id]').forEach(a => {
+            a.addEventListener('click', async ev => {
+                ev.preventDefault();
+                await switchStation(parseInt(a.dataset.id));
+            });
+        });
+    }
+    // Open Stations modal hook
+    const sModalEl = document.getElementById('stationsModal');
+    if (sModalEl) sModalEl.addEventListener('show.bs.modal', loadStations);
+    // Role-dependent station field visibility
+    const auRole = document.getElementById('auRole');
+    const auStationWrap = document.getElementById('auStationWrap');
+    if (auRole && auStationWrap) {
+        auRole.addEventListener('change', () => {
+            auStationWrap.style.display = auRole.value === 'super' ? 'none' : '';
+        });
+    }
+    const euRole = document.getElementById('euRole');
+    const euStationWrap = document.getElementById('euStationWrap');
+    if (euRole && euStationWrap) {
+        euRole.addEventListener('change', () => {
+            euStationWrap.style.display = euRole.value === 'super' ? 'none' : '';
+        });
+    }
+});
 async function deleteUser(id) {
     const u = allUsers.find(x => x.id === id);
     if (!confirm(`Видалити «${u?.username}»?`)) return;

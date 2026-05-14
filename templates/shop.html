@@ -188,6 +188,23 @@
         .scanner-badge.visible{display:flex;}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
+        /* ── Station switcher ── */
+        .station-switcher { position:relative; }
+        .station-pill { display:flex; align-items:center; gap:6px; padding:5px 11px;
+            background:linear-gradient(135deg,rgba(96,165,250,.18),rgba(96,165,250,.06));
+            border:1px solid rgba(96,165,250,.35); border-radius:8px;
+            color:var(--text); font-size:.8rem; font-weight:600; cursor:pointer; transition:background .12s; white-space:nowrap; }
+        .station-pill i.bi-building { color:var(--info); }
+        .station-pill i.bi-chevron-down { font-size:.7rem; color:var(--muted); margin-left:2px; }
+        .station-dropdown { display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:200px;
+            background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:5px;
+            box-shadow:0 12px 32px rgba(0,0,0,.45); z-index:1000; }
+        .station-dropdown.open { display:block; }
+        .station-opt { display:flex; align-items:center; gap:8px; padding:8px 11px; border-radius:6px;
+            color:var(--text); text-decoration:none; font-size:.82rem; transition:background .12s; }
+        .station-opt:hover { background:var(--bg-hover); color:var(--text); }
+        .station-opt.active { background:var(--accent-dim); color:var(--accent); font-weight:600; }
+
         /* ── Analytics ── */
         .analytics-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
         .period-pills { display:flex; gap:4px; background:var(--bg-item); border:1px solid var(--border); border-radius:7px; padding:3px; flex-wrap:wrap; }
@@ -301,8 +318,24 @@
 
 <!-- Topbar -->
 <div class="topbar">
-    <a class="topbar-logo" href="/shop"><i class="bi bi-shop me-1"></i>Магазин</a>
-    {% if user.role == 'admin' %}
+    <a class="topbar-logo" href="/shop"><i class="bi bi-shop me-1"></i>Магазин · {{ station.name if station else '—' }}</a>
+    {% if user.role == 'super' %}
+    <div class="station-switcher">
+        <button class="station-pill" id="stationPillBtn" type="button">
+            <i class="bi bi-building"></i>
+            <span>{{ station.name if station else '—' }}</span>
+            <i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="station-dropdown" id="stationDropdown">
+            {% for s in stations %}
+            <a class="station-opt {% if station and s.id == station.id %}active{% endif %}" href="#" data-id="{{ s.id }}">
+                <i class="bi bi-building"></i>{{ s.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% if user.role in ('super','admin') %}
     <div class="mode-switcher">
         <a href="/" class="mode-btn"><i class="bi bi-car-front"></i> CRM</a>
         <a href="/shop" class="mode-btn active"><i class="bi bi-shop"></i> Магазин</a>
@@ -330,9 +363,9 @@
         <div class="topbar-user">
             <i class="bi bi-person-circle" style="color:var(--muted);font-size:1.1rem;"></i>
             <span>{{ user.display_name or user.username }}</span>
-            <span class="role-badge role-{{ user.role }}">{{ {'admin':'Адмін','mechanic':'Механік','cashier':'Касир'}[user.role] }}</span>
+            <span class="role-badge role-{{ 'admin' if user.role == 'super' else user.role }}">{{ {'super':'Супер','admin':'Адмін','mechanic':'Механік','cashier':'Касир'}[user.role] }}</span>
         </div>
-        {% if user.role == 'admin' %}
+        {% if user.role in ('super','admin') %}
         <button class="btn-icon" onclick="openModal('usersModal')" title="Користувачі"><i class="bi bi-people" style="color:var(--accent)"></i></button>
         {% endif %}
         <button class="btn-icon" onclick="openModal('changePwdModal')" title="Змінити пароль"><i class="bi bi-key"></i></button>
@@ -859,7 +892,31 @@ function renderShopChart(labels, revenue, counts) {
     });
 }
 
+async function switchStation(id) {
+    try {
+        const r = await fetch('/api/stations/switch', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const data = await r.json();
+        if (data.success) location.reload();
+    } catch (e) {}
+}
 document.addEventListener('DOMContentLoaded', () => {
+    // Station dropdown
+    const btn = document.getElementById('stationPillBtn');
+    const dd  = document.getElementById('stationDropdown');
+    if (btn && dd) {
+        btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('open'); });
+        document.addEventListener('click', () => dd.classList.remove('open'));
+        dd.addEventListener('click', e => e.stopPropagation());
+        dd.querySelectorAll('.station-opt[data-id]').forEach(a => {
+            a.addEventListener('click', async ev => {
+                ev.preventDefault();
+                await switchStation(parseInt(a.dataset.id));
+            });
+        });
+    }
     const pills = document.getElementById('shopPeriodPills');
     if (pills) {
         pills.querySelectorAll('.period-pill').forEach(b => {
