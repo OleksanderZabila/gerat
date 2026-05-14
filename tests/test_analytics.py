@@ -141,6 +141,82 @@ class TestPeriodParam:
         assert d['period_days'] == 7
 
 
+# ── Custom date range (?from=&to=) ──────────────────────────────────────────
+
+class TestCustomDateRange:
+    def test_explicit_from_to_inclusive(self, client):
+        _login(client)
+        today = date.today()
+        d_from = (today - timedelta(days=4)).isoformat()
+        d_to   = today.isoformat()
+        d = client.get(f'/api/analytics/crm?from={d_from}&to={d_to}').get_json()
+        # Range is inclusive → 5 days
+        assert d['period_days'] == 5
+        assert len(d['series']) == 5
+        assert d['series'][0]['date']  == d_from
+        assert d['series'][-1]['date'] == d_to
+
+    def test_reversed_dates_get_swapped(self, client):
+        _login(client)
+        today = date.today()
+        d_from = today.isoformat()
+        d_to   = (today - timedelta(days=3)).isoformat()
+        d = client.get(f'/api/analytics/crm?from={d_from}&to={d_to}').get_json()
+        assert d['period_days'] == 4
+        assert d['series'][0]['date']  == d_to     # earliest first after swap
+        assert d['series'][-1]['date'] == d_from
+
+    def test_custom_range_filters_orders(self, client):
+        _login(client)
+        # Orders on day 1, 5, 10 ago
+        _seed_orders([
+            (1,  'A', 100, []),
+            (5,  'B', 200, []),
+            (10, 'C', 300, []),
+        ])
+        today = date.today()
+        d_from = (today - timedelta(days=6)).isoformat()
+        d_to   = today.isoformat()
+        d = client.get(f'/api/analytics/crm?from={d_from}&to={d_to}').get_json()
+        # Only orders within the 7-day window: day 1 + day 5
+        assert d['total_orders']  == 2
+        assert d['total_revenue'] == 300
+
+    def test_invalid_date_falls_back_to_days(self, client):
+        _login(client)
+        d = client.get('/api/analytics/crm?from=not-a-date&to=also-not&days=10').get_json()
+        assert d['period_days'] == 10
+
+    def test_single_day_range(self, client):
+        _login(client)
+        today = date.today().isoformat()
+        d = client.get(f'/api/analytics/crm?from={today}&to={today}').get_json()
+        assert d['period_days'] == 1
+        assert len(d['series']) == 1
+        assert d['series'][0]['date'] == today
+
+    def test_oversized_range_clamped(self, client):
+        _login(client)
+        today   = date.today()
+        d_from  = (today - timedelta(days=500)).isoformat()
+        d_to    = today.isoformat()
+        d = client.get(f'/api/analytics/crm?from={d_from}&to={d_to}').get_json()
+        assert d['period_days'] == 365  # clamped
+
+    def test_shop_custom_range(self, client):
+        _login(client)
+        _seed_sales([
+            (1, 100, []),
+            (15, 999, []),  # outside 7-day window
+        ])
+        today = date.today()
+        d_from = (today - timedelta(days=6)).isoformat()
+        d_to   = today.isoformat()
+        d = client.get(f'/api/analytics/shop?from={d_from}&to={d_to}').get_json()
+        assert d['total_sales']   == 1
+        assert d['total_revenue'] == 100
+
+
 # ── Series shape ────────────────────────────────────────────────────────────
 
 class TestSeriesShape:

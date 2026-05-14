@@ -491,22 +491,52 @@ def get_stats():
 
 # ── Analytics ────────────────────────────────────────────────────────────────────
 
-def _parse_days(default=7, mn=1, mx=365):
-    """Clamp the ?days= query param into a safe range."""
-    try:
-        n = int(request.args.get('days', default))
-    except (TypeError, ValueError):
-        n = default
-    return max(mn, min(mx, n))
+def _parse_range(mn=1, mx=365, default_days=7):
+    """
+    Resolve query params into a date range.
+    Supports either ?days=N or ?from=YYYY-MM-DD&to=YYYY-MM-DD (inclusive).
+    Returns (period_start, period_end_exclusive, days, prev_start, prev_end_exclusive, end_date).
+    """
+    from_str = request.args.get('from')
+    to_str   = request.args.get('to')
+    d_from = d_to = None
+
+    if from_str and to_str:
+        try:
+            d_from = datetime.fromisoformat(from_str).date()
+            d_to   = datetime.fromisoformat(to_str).date()
+            if d_from > d_to:
+                d_from, d_to = d_to, d_from
+        except (ValueError, TypeError):
+            d_from = d_to = None
+
+    if d_from and d_to:
+        days = (d_to - d_from).days + 1
+        days = max(mn, min(mx, days))
+        d_from = d_to - timedelta(days=days - 1)  # re-anchor after clamp
+    else:
+        try:
+            days = int(request.args.get('days', default_days))
+        except (TypeError, ValueError):
+            days = default_days
+        days = max(mn, min(mx, days))
+        d_to   = _date.today()
+        d_from = d_to - timedelta(days=days - 1)
+
+    period_start = datetime.combine(d_from, datetime.min.time())
+    period_end   = datetime.combine(d_to + timedelta(days=1), datetime.min.time())
+    prev_start   = period_start - timedelta(days=days)
+    prev_end     = period_start
+    return period_start, period_end, days, prev_start, prev_end, d_to
 
 
-def _build_series(days, rows, total_field='total'):
+def _build_series(days, rows, end_date=None):
     """
     rows: list of (created_at, total) tuples.
     Returns a list of {date, count, revenue} dicts, one per day, oldest first,
-    with gaps filled by zeros.
+    with gaps filled by zeros. `end_date` is the inclusive last day of the range.
     """
-    today = _date.today()
+    end = end_date or _date.today()
     buckets = {}
     for created_at, total in rows:
         key = created_at.date().isoformat() if hasattr(created_at, 'date') else str(created_at)
@@ -515,7 +545,7 @@ def _build_series(days, rows, total_field='total'):
         b['revenue'] += int(total or 0)
     series = []
     for i in range(days - 1, -1, -1):
-        d = (today - timedelta(days=i)).isoformat()
+        d = (end - timedelta(days=i)).isoformat()
         b = buckets.get(d, {'count': 0, 'revenue': 0})
         series.append({'date': d, 'count': b['count'], 'revenue': b['revenue']})
     return series
@@ -524,13 +554,11 @@ def _build_series(days, rows, total_field='total'):
 @app.route('/api/analytics/crm')
 @login_required
 def analytics_crm():
-    """Daily analytics for CRM (orders) over the last N days."""
-    days = _parse_days()
-    period_start = datetime.combine(_date.today() - timedelta(days=days - 1), datetime.min.time())
-    prev_start   = period_start - timedelta(days=days)
-    prev_end     = period_start
+    """Daily analytics for CRM (orders) over the requested date range."""
+    period_start, period_end, days, prev_start, prev_end, end_date = _parse_range()
 
-    orders = Order.query.filter(Order.created_at >= period_start).all()
+    orders = Order.query.filter(Order.created_at >= period_start,
+                                Order.created_at < period_end).all()
     prev_orders = Order.query.filter(Order.created_at >= prev_start,
                                      Order.created_at < prev_end).all()
 
@@ -541,7 +569,7 @@ def analytics_crm():
     prev_orders_n = len(prev_orders)
     prev_revenue  = sum(int(o.total or 0) for o in prev_orders)
 
-    series = _build_series(days, [(o.created_at, o.total) for o in orders])
+    series = _build_series(days, [(o.created_at, o.total) for o in orders], end_date=end_date)
 
     # Top services across all orders in period
     svc_counts = {}
@@ -592,13 +620,11 @@ def analytics_crm():
 @app.route('/api/analytics/shop')
 @login_required
 def analytics_shop():
-    """Daily analytics for the shop (sales) over the last N days."""
-    days = _parse_days()
-    period_start = datetime.combine(_date.today() - timedelta(days=days - 1), datetime.min.time())
-    prev_start   = period_start - timedelta(days=days)
-    prev_end     = period_start
+    """Daily analytics for the shop (sales) over the requested date range."""
+    period_start, period_end, days, prev_start, prev_end, end_date = _parse_range()
 
-    sales = Sale.query.filter(Sale.created_at >= period_start).all()
+    sales = Sale.query.filter(Sale.created_at >= period_start,
+                              Sale.created_at < period_end).all()
     prev_sales = Sale.query.filter(Sale.created_at >= prev_start,
                                    Sale.created_at < prev_end).all()
 
@@ -609,7 +635,7 @@ def analytics_shop():
     prev_sales_n  = len(prev_sales)
     prev_revenue  = sum(int(s.total or 0) for s in prev_sales)
 
-    series = _build_series(days, [(s.created_at, s.total) for s in sales])
+    series = _build_series(days, [(s.created_at, s.total) for s in sales], end_date=end_date)
 
     # Profit estimate: revenue - cost of goods sold
     # We look up products by id to get buy_price.
