@@ -6,6 +6,7 @@
     <title>Магазин — СТО «Герат»</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-base:#070d16; --bg-card:#0c1520; --bg-item:#111e2e; --bg-hover:#172638;
@@ -187,6 +188,35 @@
         .scanner-badge.visible{display:flex;}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
+        /* ── Analytics ── */
+        .period-pills { display:flex; gap:4px; background:var(--bg-item); border:1px solid var(--border); border-radius:7px; padding:3px; }
+        .period-pill { padding:4px 11px; border:none; background:none; color:var(--muted); font-size:.76rem; font-weight:600; border-radius:5px; cursor:pointer; transition:background .12s, color .12s; }
+        .period-pill:hover { color:var(--text); }
+        .period-pill.active { background:var(--accent); color:#fff; }
+
+        .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px; }
+        .kpi-card { background:var(--bg-item); border:1px solid var(--border); border-radius:9px; padding:12px 14px; }
+        .kpi-label { font-size:.72rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.4px; display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+        .kpi-val { font-size:1.4rem; font-weight:800; color:var(--text); line-height:1.1; }
+        .kpi-delta { font-size:.73rem; margin-top:3px; font-weight:600; }
+        .kpi-delta.up   { color:var(--success); }
+        .kpi-delta.down { color:var(--danger); }
+        .kpi-delta.flat { color:var(--muted); }
+
+        .chart-card { background:var(--bg-item); border:1px solid var(--border); border-radius:9px; padding:12px 14px; margin-bottom:12px; }
+        .chart-title { font-size:.78rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+
+        .lists-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .list-card { background:var(--bg-item); border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+        .list-card-title { font-size:.78rem; color:var(--text); font-weight:700; padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:7px; }
+        .top-row { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; border-bottom:1px solid var(--border); font-size:.83rem; gap:8px; }
+        .top-row:last-child { border-bottom:none; }
+        .top-row .nm { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .top-row .val { color:var(--accent); font-weight:700; white-space:nowrap; }
+        .top-row .sub { color:var(--muted); font-size:.74rem; margin-left:6px; }
+        @media (max-width: 991px) { .kpi-grid { grid-template-columns:1fr 1fr; } }
+        @media (max-width: 767px) { .lists-row { grid-template-columns:1fr; } }
+
         /* Print */
         #print-area{display:none;}
         @media print{body>*:not(#print-area){display:none!important;}#print-area{display:block!important;font-family:Arial,sans-serif;}.statusbar{display:none!important;}}
@@ -299,9 +329,10 @@
     <!-- LEFT panel -->
     <div class="panel">
         <div class="panel-head">
-            <button class="tab-btn active" id="tab-catalog" onclick="switchTab('catalog')"><i class="bi bi-grid-3x3-gap"></i>Каталог</button>
-            <button class="tab-btn" id="tab-sales"   onclick="switchTab('sales')">  <i class="bi bi-receipt"></i>Продажі</button>
-            <button class="tab-btn" id="tab-inv"     onclick="switchTab('inv')">    <i class="bi bi-boxes"></i>Склад</button>
+            <button class="tab-btn active" id="tab-catalog"   onclick="switchTab('catalog')">  <i class="bi bi-grid-3x3-gap"></i>Каталог</button>
+            <button class="tab-btn"        id="tab-sales"     onclick="switchTab('sales')">    <i class="bi bi-receipt"></i>Продажі</button>
+            <button class="tab-btn"        id="tab-inv"       onclick="switchTab('inv')">      <i class="bi bi-boxes"></i>Склад</button>
+            <button class="tab-btn"        id="tab-analytics" onclick="switchTab('analytics')"><i class="bi bi-graph-up-arrow"></i>Аналітика</button>
         </div>
 
         <!-- Каталог -->
@@ -356,6 +387,56 @@
                     </tr></thead>
                     <tbody id="invTable"></tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Аналітика -->
+        <div class="tab-pane" id="pane-analytics" style="flex-direction:column;gap:0;padding:14px;overflow-y:auto;">
+            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" style="gap:8px;">
+                <span class="sec-title" style="margin-bottom:0;">Аналітика магазину</span>
+                <div class="period-pills" id="shopPeriodPills">
+                    <button class="period-pill" data-days="7">7 днів</button>
+                    <button class="period-pill active" data-days="14">14 днів</button>
+                    <button class="period-pill" data-days="30">30 днів</button>
+                    <button class="period-pill" data-days="90">90 днів</button>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label"><i class="bi bi-receipt" style="color:var(--accent)"></i> Продажів</div>
+                    <div class="kpi-val" id="sKpiSales">—</div>
+                    <div class="kpi-delta" id="sKpiSalesDelta"></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label"><i class="bi bi-cash-coin" style="color:var(--success)"></i> Виручка</div>
+                    <div class="kpi-val" id="sKpiRev">—</div>
+                    <div class="kpi-delta" id="sKpiRevDelta"></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label"><i class="bi bi-graph-up" style="color:var(--info)"></i> Прибуток</div>
+                    <div class="kpi-val" id="sKpiProfit">—</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label"><i class="bi bi-bag-check" style="color:var(--info)"></i> Сер. чек</div>
+                    <div class="kpi-val" id="sKpiAvg">—</div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">Продажі по днях</div>
+                <canvas id="shopChart" height="180"></canvas>
+            </div>
+
+            <div class="lists-row">
+                <div class="list-card">
+                    <div class="list-card-title"><i class="bi bi-trophy" style="color:var(--accent)"></i> Топ товарів</div>
+                    <div id="topProducts"><div class="empty"><p>Немає даних</p></div></div>
+                </div>
+                <div class="list-card">
+                    <div class="list-card-title"><i class="bi bi-boxes" style="color:var(--warning)"></i> Склад</div>
+                    <div id="invSummary"><div class="empty"><p>Завантаження…</p></div></div>
+                </div>
             </div>
         </div>
     </div>
@@ -614,13 +695,126 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 
 // ── TABS ─────────────────────────────────────────────────────────────────────
 function switchTab(t) {
-    ['catalog','sales','inv'].forEach(id => {
+    ['catalog','sales','inv','analytics'].forEach(id => {
         document.getElementById(`tab-${id}`).classList.toggle('active', id === t);
         document.getElementById(`pane-${id}`).classList.toggle('active', id === t);
     });
-    if (t === 'sales') loadSales();
-    if (t === 'inv') { renderInv(); updateInvStats(); }
+    if (t === 'sales')     loadSales();
+    if (t === 'inv')       { renderInv(); updateInvStats(); }
+    if (t === 'analytics') loadShopAnalytics();
 }
+
+// ── ANALYTICS ────────────────────────────────────────────────────────────────
+let shopAnalyticsDays = 14;
+let shopChartObj = null;
+
+function fmtDelta(curr, prev) {
+    if (!prev && !curr) return { txt: '—', cls: 'flat' };
+    if (!prev) return { txt: 'новий період', cls: 'up' };
+    const diff = curr - prev;
+    const pct = Math.round((diff / prev) * 100);
+    if (diff === 0) return { txt: '0% до попер. періоду', cls: 'flat' };
+    const arrow = diff > 0 ? '▲' : '▼';
+    const cls = diff > 0 ? 'up' : 'down';
+    return { txt: `${arrow} ${Math.abs(pct)}% до попер. періоду`, cls };
+}
+
+function fmtShortDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return d.getDate() + '.' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+async function loadShopAnalytics() {
+    try {
+        const res = await fetch(`/api/analytics/shop?days=${shopAnalyticsDays}`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const d = await res.json();
+
+        document.getElementById('sKpiSales').textContent  = d.total_sales;
+        document.getElementById('sKpiRev').textContent    = fmt(d.total_revenue);
+        document.getElementById('sKpiProfit').textContent = fmt(d.total_profit);
+        document.getElementById('sKpiAvg').textContent    = fmt(d.avg_sale);
+
+        const dS = fmtDelta(d.total_sales,   d.prev_sales);
+        const dR = fmtDelta(d.total_revenue, d.prev_revenue);
+        const eS = document.getElementById('sKpiSalesDelta');
+        const eR = document.getElementById('sKpiRevDelta');
+        eS.textContent = dS.txt; eS.className = 'kpi-delta ' + dS.cls;
+        eR.textContent = dR.txt; eR.className = 'kpi-delta ' + dR.cls;
+
+        const labels  = d.series.map(p => fmtShortDate(p.date));
+        const revenue = d.series.map(p => p.revenue);
+        const counts  = d.series.map(p => p.count);
+        renderShopChart(labels, revenue, counts);
+
+        // Top products
+        const tp = document.getElementById('topProducts');
+        if (!d.top_products.length) {
+            tp.innerHTML = '<div class="empty" style="padding:18px;"><p>Немає даних</p></div>';
+        } else {
+            tp.innerHTML = d.top_products.map(p =>
+                `<div class="top-row"><span class="nm">${esc(p.name)}<span class="sub">${p.qty} шт.</span></span><span class="val">${fmt(p.revenue)}</span></div>`
+            ).join('');
+        }
+
+        // Inventory summary
+        const inv = d.inventory;
+        document.getElementById('invSummary').innerHTML = `
+            <div class="top-row"><span class="nm"><i class="bi bi-x-circle" style="color:var(--danger);margin-right:6px;"></i>Закінчилось</span><span class="val" style="color:var(--danger)">${inv.out_of_stock}</span></div>
+            <div class="top-row"><span class="nm"><i class="bi bi-exclamation-triangle" style="color:var(--warning);margin-right:6px;"></i>Мало (≤ 3)</span><span class="val" style="color:var(--warning)">${inv.low_stock}</span></div>
+            <div class="top-row"><span class="nm"><i class="bi bi-cash-stack" style="color:var(--success);margin-right:6px;"></i>Вартість запасів</span><span class="val">${fmt(inv.inventory_value)}</span></div>`;
+    } catch (e) {
+        toast('Помилка завантаження аналітики', 'error');
+    }
+}
+
+function renderShopChart(labels, revenue, counts) {
+    const ctx = document.getElementById('shopChart');
+    if (!ctx) return;
+    if (shopChartObj) shopChartObj.destroy();
+    const css = getComputedStyle(document.documentElement);
+    const accent = css.getPropertyValue('--accent').trim() || '#f97316';
+    const info   = css.getPropertyValue('--info').trim()   || '#60a5fa';
+    const muted  = css.getPropertyValue('--muted').trim()  || '#7c8fa8';
+    const border = css.getPropertyValue('--border').trim() || '#1c2e44';
+
+    shopChartObj = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { type: 'line', label: 'Виручка, грн', data: revenue, borderColor: accent,
+                  backgroundColor: 'rgba(249,115,22,.15)', yAxisID: 'y1', tension: .35, fill: true,
+                  pointBackgroundColor: accent, borderWidth: 2 },
+                { label: 'К-ть продажів', data: counts, backgroundColor: 'rgba(96,165,250,.45)',
+                  borderColor: info, borderWidth: 1, yAxisID: 'y2' }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: muted, font: { size: 11 } } } },
+            scales: {
+                x:  { ticks: { color: muted, font: { size: 10 } }, grid: { color: border } },
+                y1: { position: 'left',  ticks: { color: accent, font: { size: 10 } }, grid: { color: border }, beginAtZero: true },
+                y2: { position: 'right', ticks: { color: info,   font: { size: 10 }, precision: 0 }, grid: { drawOnChartArea: false }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const pills = document.getElementById('shopPeriodPills');
+    if (pills) {
+        pills.querySelectorAll('.period-pill').forEach(b => {
+            b.addEventListener('click', () => {
+                pills.querySelectorAll('.period-pill').forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                shopAnalyticsDays = parseInt(b.dataset.days);
+                loadShopAnalytics();
+            });
+        });
+    }
+});
 
 // ── STATS ────────────────────────────────────────────────────────────────────
 async function loadStats() {

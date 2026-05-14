@@ -1,7 +1,7 @@
 import os
 import re
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, date as _date
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
@@ -470,7 +470,6 @@ def shop_del_sale():
 @app.route('/api/stats')
 @login_required
 def get_stats():
-    from datetime import date as _date
     today_start = datetime.combine(_date.today(), datetime.min.time())
     crm_revenue  = db.session.query(db.func.sum(Order.total)).filter(Order.created_at >= today_start).scalar() or 0
     crm_orders   = Order.query.filter(Order.created_at >= today_start).count()
@@ -487,6 +486,195 @@ def get_stats():
         'low_stock': low_stock,
         'out_of_stock': out_of_stock,
         'total_clients': total_clients,
+    })
+
+
+# ── Analytics ────────────────────────────────────────────────────────────────────
+
+def _parse_days(default=7, mn=1, mx=365):
+    """Clamp the ?days= query param into a safe range."""
+    try:
+        n = int(request.args.get('days', default))
+    except (TypeError, ValueError):
+        n = default
+    return max(mn, min(mx, n))
+
+
+def _build_series(days, rows, total_field='total'):
+    """
+    rows: list of (created_at, total) tuples.
+    Returns a list of {date, count, revenue} dicts, one per day, oldest first,
+    with gaps filled by zeros.
+    """
+    today = _date.today()
+    buckets = {}
+    for created_at, total in rows:
+        key = created_at.date().isoformat() if hasattr(created_at, 'date') else str(created_at)
+        b = buckets.setdefault(key, {'count': 0, 'revenue': 0})
+        b['count'] += 1
+        b['revenue'] += int(total or 0)
+    series = []
+    for i in range(days - 1, -1, -1):
+        d = (today - timedelta(days=i)).isoformat()
+        b = buckets.get(d, {'count': 0, 'revenue': 0})
+        series.append({'date': d, 'count': b['count'], 'revenue': b['revenue']})
+    return series
+
+
+@app.route('/api/analytics/crm')
+@login_required
+def analytics_crm():
+    """Daily analytics for CRM (orders) over the last N days."""
+    days = _parse_days()
+    period_start = datetime.combine(_date.today() - timedelta(days=days - 1), datetime.min.time())
+    prev_start   = period_start - timedelta(days=days)
+    prev_end     = period_start
+
+    orders = Order.query.filter(Order.created_at >= period_start).all()
+    prev_orders = Order.query.filter(Order.created_at >= prev_start,
+                                     Order.created_at < prev_end).all()
+
+    total_orders  = len(orders)
+    total_revenue = sum(int(o.total or 0) for o in orders)
+    avg_order     = total_revenue // total_orders if total_orders else 0
+
+    prev_orders_n = len(prev_orders)
+    prev_revenue  = sum(int(o.total or 0) for o in prev_orders)
+
+    series = _build_series(days, [(o.created_at, o.total) for o in orders])
+
+    # Top services across all orders in period
+    svc_counts = {}
+    svc_revenue = {}
+    for o in orders:
+        try:
+            items = json.loads(o.items or '[]')
+        except Exception:
+            items = []
+        for it in items:
+            name = (it.get('name') or '').strip()
+            if not name:
+                continue
+            svc_counts[name] = svc_counts.get(name, 0) + 1
+            svc_revenue[name] = svc_revenue.get(name, 0) + int(it.get('price') or 0)
+    top_services = sorted(
+        [{'name': n, 'count': c, 'revenue': svc_revenue.get(n, 0)} for n, c in svc_counts.items()],
+        key=lambda x: -x['revenue']
+    )[:8]
+
+    # Top clients (by total revenue in period)
+    cli_rev = {}
+    cli_cnt = {}
+    for o in orders:
+        name = (o.client_name or '').strip()
+        if not name:
+            continue
+        cli_rev[name] = cli_rev.get(name, 0) + int(o.total or 0)
+        cli_cnt[name] = cli_cnt.get(name, 0) + 1
+    top_clients = sorted(
+        [{'name': n, 'revenue': r, 'orders': cli_cnt.get(n, 0)} for n, r in cli_rev.items()],
+        key=lambda x: -x['revenue']
+    )[:8]
+
+    return jsonify({
+        'period_days':   days,
+        'total_orders':  total_orders,
+        'total_revenue': total_revenue,
+        'avg_order':     avg_order,
+        'prev_orders':   prev_orders_n,
+        'prev_revenue':  prev_revenue,
+        'series':        series,
+        'top_services':  top_services,
+        'top_clients':   top_clients,
+    })
+
+
+@app.route('/api/analytics/shop')
+@login_required
+def analytics_shop():
+    """Daily analytics for the shop (sales) over the last N days."""
+    days = _parse_days()
+    period_start = datetime.combine(_date.today() - timedelta(days=days - 1), datetime.min.time())
+    prev_start   = period_start - timedelta(days=days)
+    prev_end     = period_start
+
+    sales = Sale.query.filter(Sale.created_at >= period_start).all()
+    prev_sales = Sale.query.filter(Sale.created_at >= prev_start,
+                                   Sale.created_at < prev_end).all()
+
+    total_sales   = len(sales)
+    total_revenue = sum(int(s.total or 0) for s in sales)
+    avg_sale      = total_revenue // total_sales if total_sales else 0
+
+    prev_sales_n  = len(prev_sales)
+    prev_revenue  = sum(int(s.total or 0) for s in prev_sales)
+
+    series = _build_series(days, [(s.created_at, s.total) for s in sales])
+
+    # Profit estimate: revenue - cost of goods sold
+    # We look up products by id to get buy_price.
+    prod_buy = {p.id: int(p.buy_price or 0) for p in Product.query.all()}
+    total_profit = 0
+    prod_qty  = {}   # product_id -> total qty sold
+    prod_rev  = {}   # product_id -> total revenue
+    prod_name = {}   # product_id -> name (for display)
+    for s in sales:
+        try:
+            items = json.loads(s.items or '[]')
+        except Exception:
+            items = []
+        for it in items:
+            pid = it.get('id')
+            qty = int(it.get('qty') or 0)
+            price = int(it.get('price') or 0)
+            name = (it.get('name') or '').strip()
+            line_rev = price * qty
+            if pid:
+                cost = prod_buy.get(pid, 0) * qty
+                total_profit += line_rev - cost
+                prod_qty[pid]  = prod_qty.get(pid, 0) + qty
+                prod_rev[pid]  = prod_rev.get(pid, 0) + line_rev
+                if name:
+                    prod_name[pid] = name
+            elif name:
+                # Untracked product: use name as key
+                key = f'_n_{name}'
+                prod_qty[key]  = prod_qty.get(key, 0) + qty
+                prod_rev[key]  = prod_rev.get(key, 0) + line_rev
+                prod_name[key] = name
+
+    top_products = sorted(
+        [
+            {'name': prod_name.get(k, f'#{k}'),
+             'qty':  prod_qty[k],
+             'revenue': prod_rev.get(k, 0)}
+            for k in prod_qty
+        ],
+        key=lambda x: -x['revenue']
+    )[:8]
+
+    # Inventory snapshot
+    out_of_stock = Product.query.filter(Product.quantity == 0).count()
+    low_stock    = Product.query.filter(Product.quantity > 0, Product.quantity <= 3).count()
+    inventory_value = db.session.query(
+        db.func.sum(Product.sell_price * Product.quantity)
+    ).scalar() or 0
+
+    return jsonify({
+        'period_days':     days,
+        'total_sales':     total_sales,
+        'total_revenue':   total_revenue,
+        'total_profit':    total_profit,
+        'avg_sale':        avg_sale,
+        'prev_sales':      prev_sales_n,
+        'prev_revenue':    prev_revenue,
+        'series':          series,
+        'top_products':    top_products,
+        'inventory': {
+            'out_of_stock':    out_of_stock,
+            'low_stock':       low_stock,
+            'inventory_value': int(inventory_value),
+        },
     })
 
 
